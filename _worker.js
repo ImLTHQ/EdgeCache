@@ -142,6 +142,14 @@ function go(){
 }
 
 function pageHtml(encodedKey, rawKey, origin) {
+  // 工具函数：每32个字符插入换行符
+  function wrapText(str, maxLength) {
+    const regex = new RegExp(`(.{1,${maxLength}})`, 'g');
+    return str.match(regex)?.join('\n') || str;
+  }
+  // 处理标识，每32字符换行
+  const wrappedKey = wrapText(rawKey, 32);
+  
   const shareUrl = `${origin}/${encodedKey}/`;
   const basePath = `/${encodedKey}`;
 
@@ -190,6 +198,8 @@ body {
   color: #dc2626;
   font-size: 14px;
   text-align: center;
+  white-space: pre-wrap;
+  line-height: 1.6;
 }
 .file-info {
   background: rgba(255, 255, 255, 0.7);
@@ -284,7 +294,9 @@ input[type="range"]::-webkit-slider-thumb {
 <body>
 <div id="uploadArea" class="card">
   <h2 class="card-title">上传文件</h2>
-  <p class="tip">空间标识: ${rawKey} | 单文件最大25MB</p>
+  <!-- 分行显示，且标识自动换行 -->
+  <p class="tip">空间标识: ${wrappedKey}
+单文件最大25MB</p>
   
   <div class="slider-container">
     <div class="slider-label">文件有效期：<span id="ttlText">30分钟</span></div>
