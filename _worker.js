@@ -82,17 +82,18 @@ html,body{
   background-attachment:fixed;
 }
 
-/* 核心：高度固定为屏幕 1/3 */
+/* 外层：宽度限制为窗口 1/3 */
 .container {
+  width: 100%;
+  max-width: 33vw;
+  min-height: 33vh;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 33vh;
-  width: 100%;
-  padding: 0 20px;
 }
 
-/* 盒子：宽度自适应 + 最小最大限制 + 高度100% */
+/* 卡片：自适应高度 + 最大宽度 1/3屏幕 */
 .box {
   background: rgba(255,255,255,0.55);
   backdrop-filter: blur(12px);
@@ -100,9 +101,8 @@ html,body{
   border: 1px solid rgba(255,255,255,0.6);
   border-radius: 16px;
   padding: 28px 32px;
-  height: 100%;
-  min-width: 320px;
-  max-width: 520px;
+  width: 100%;
+  min-height: 33vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -133,6 +133,7 @@ h3{
   line-height:1.5;
   white-space: pre-wrap;
   word-break: break-word;
+  width: 100%;
 }
 
 button,.upload-btn{
