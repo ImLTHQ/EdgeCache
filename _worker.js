@@ -5,7 +5,7 @@ export default {
     const pathParts = url.pathname.split('/').filter(Boolean);
 
     const encodedKey = pathParts[0] || '';
-    const MAX_ENCODED_LENGTH = 64;
+    const MAX_ENCODED_LENGTH = 128;
 
     if (url.pathname === '/' || !encodedKey || encodedKey.length > MAX_ENCODED_LENGTH) {
       return new Response(inputHtml(), {
@@ -129,8 +129,8 @@ function go(){
   const key = document.getElementById('key').value.trim();
   if(!key) {alert('请输入标识');return;}
   const encoded = encodeURIComponent(key);
-  if(encoded.length > 64){
-    alert('编码后最多允许64个字符!');
+  if(encoded.length > 128){
+    alert('编码后最多允许128个字符!');
     return;
   }
   window.location.href = '/' + encoded + '/';
