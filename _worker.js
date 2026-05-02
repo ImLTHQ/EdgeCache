@@ -82,40 +82,52 @@ html,body{
   background-attachment:fixed;
 }
 
-/* 固定大小卡片 - 放大25% */
-.box {
+/* 文件页卡片 保持原放大25%尺寸不变 */
+#fileArea.box {
   width: 525px;
   height: 400px;
+  padding: 38px;
+  border-radius: 20px;
+}
+
+/* 上传页 单独自定义尺寸，不和文件页一致 */
+#uploadArea.box {
+  width: 525px;
+  height: 360px;
+  padding: 32px;
+  border-radius: 20px;
+  /* 内容垂直居中，保留合理上下间距，只减少底部多余空位 */
+  justify-content: center;
+  gap: 16px;
+}
+
+.box {
   background: rgba(255,255,255,0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.6);
-  border-radius: 20px;
-  padding: 38px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   overflow: hidden;
 }
 
-/* 上传页面：内容整体居中，消除底部多余空位 */
-#uploadArea {
-  justify-content: center;
-  gap: 2px;
-}
-
+/* 上传页文字样式 */
 #uploadArea h3 {
   font-size: 28px;
   color:#111;
   text-align:center;
+  margin: 0;
 }
 
-.tip{
+#uploadArea .tip{
   color:#dc2626;
   font-size: 18px;
   text-align:center;
+  margin: 0;
 }
 
+/* 文件页样式 完全保留原样 */
 .file-wrap {
   flex: 1;
   display: flex;
@@ -155,6 +167,7 @@ button,.upload-btn{
   font-size: 19px;
   font-weight:500;
   cursor:pointer;
+  margin:0;
   background:#3b82f6;
   color:#fff;
   text-align:center;
@@ -170,6 +183,7 @@ button,.upload-btn{
   font-size: 18px;
   text-align:center;
   min-height:24px;
+  margin: 0;
 }
 
 #uploadArea, #fileArea{
