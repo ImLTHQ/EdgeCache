@@ -82,7 +82,7 @@ html,body{
   background-attachment:fixed;
 }
 
-/* 固定大小卡片，永远不变 */
+/* 固定大小卡片 */
 .box {
   width: 420px;
   height: 320px;
@@ -94,12 +94,12 @@ html,body{
   padding: 30px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   overflow: hidden;
 }
 
-h3{
+/* 上传页标题正常居中 */
+#uploadArea h3 {
   font-size:22px;
   margin-bottom:10px;
   color:#111;
@@ -113,18 +113,38 @@ h3{
   margin-bottom:20px;
 }
 
-/* 只有文件名过长自动换行 */
+/* 文件信息区域：标题+内容 整体布局 */
+.file-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* 当前文件文字：顶部区块垂直居中 */
+.file-wrap h3 {
+  font-size:22px;
+  color:#111;
+  text-align:center;
+  margin: 0 0 20px 0;
+}
+
+/* 文件名框内部文字垂直水平都居中，长名自动换行 */
 .info{
   background:rgba(255,255,255,0.6);
   padding:14px 18px;
   border-radius:10px;
-  margin:14px 0;
+  margin:0;
   text-align:center;
   font-size:15px;
   line-height:1.5;
   white-space: pre-wrap;
   word-break: break-word;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
 }
 
 button,.upload-btn{
@@ -174,8 +194,10 @@ input[type="file"]{
 </div>
 
 <div id="fileArea" class="box">
-  <h3>当前文件</h3>
-  <div class="info" id="fileInfo"></div>
+  <div class="file-wrap">
+    <h3>当前文件</h3>
+    <div class="info" id="fileInfo"></div>
+  </div>
   <button class="btn-blue" onclick="download()">下载</button>
   <button class="btn-red" onclick="delFile()">删除</button>
 </div>
@@ -236,5 +258,5 @@ window.onload=loadInfo;
 </script>
 </body>
 </html>
-  `;
+`;
 }
