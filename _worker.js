@@ -72,88 +72,96 @@ function pageHtml() {
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 
-/* 全屏自适应布局核心 */
 html,body{
   width:100%;
-  min-height:100vh;
+  height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
   padding:20px;
-  background:#f9fafb;
+  background: linear-gradient(135deg, rgb(255, 100, 180) 0%, rgb(200, 150, 255) 50%, rgb(0, 255, 255) 100%);
+  background-attachment: fixed;
 }
 
-/* 动态宽度：最大600px，小屏自动占满 */
 .container{
   width:100%;
-  max-width:600px;
+  max-width:420px;
   margin:0 auto;
 }
 
+/* 毛玻璃半透明卡片 */
 .box{
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:32px;
-  margin-bottom:20px;
-  background:#fff;
-  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+  background: rgba(255, 255, 255, 0.56);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius:1rem;
+  padding:2.2rem;
+  border:1px solid rgba(255,255,255,0.6);
+  box-shadow:0 8px 32px rgba(0,0,0,0.1);
 }
 
-/* 动态字体大小 */
 h3{
-  font-size:clamp(18px,4vw,24px);
-  margin-bottom:12px;
-  color:#111827;
+  font-size:22px;
+  margin-bottom:10px;
+  color:#111;
+  text-align:center;
 }
 
 .tip{
-  color:#ef4444;
-  font-size:clamp(13px,2.5vw,15px);
-  margin:8px 0;
-  line-height:1.4;
+  color:#dc2626;
+  font-size:14px;
+  text-align:center;
+  margin-bottom:18px;
 }
 
 .info{
-  background:#f9fafb;
-  padding:16px;
+  background:rgba(255,255,255,0.6);
+  padding:14px;
   border-radius:10px;
   margin:16px 0;
-  font-size:clamp(14px,3vw,16px);
+  text-align:center;
   line-height:1.6;
-  white-space:pre-wrap;
+  color:#222;
 }
 
-/* 按钮全屏自适应 */
+/* 按钮 */
 button,.upload-btn{
   width:100%;
-  padding:14px 20px;
+  padding:14px;
   border:none;
-  border-radius:10px;
-  cursor:pointer;
-  margin:8px 0;
-  font-size:clamp(15px,3.5vw,17px);
+  border-radius:12px;
+  font-size:16px;
   font-weight:500;
-  text-align:center;
+  cursor:pointer;
+  margin:6px 0;
   transition:0.2s;
+  background:#3b82f6;
+  color:#fff;
+  text-align:center;
+  display:block;
 }
 
-.btn-blue{background:#3b82f6;color:#fff}
-.btn-red{background:#ef4444;color:#fff}
-.upload-btn{background:#3b82f6;color:#fff;display:inline-block}
+.btn-red{
+  background:#ef4444;
+}
 
 #status{
   margin-top:16px;
-  color:#ef4444;
-  font-size:clamp(14px,3vw,16px);
+  color:#dc2626;
+  font-weight:500;
   text-align:center;
   min-height:20px;
 }
 
-#uploadArea, #fileArea{display:none}
+#uploadArea, #fileArea{
+  display:none;
+}
 
 input[type="file"]{
-  width:1px; height:1px; opacity:0;
-  overflow:hidden; position:absolute;
+  width:1px;
+  height:1px;
+  opacity:0;
+  position:absolute;
   z-index:-1;
 }
 </style>
@@ -163,7 +171,7 @@ input[type="file"]{
 <div class="container">
   <div id="uploadArea" class="box">
     <h3>上传文件</h3>
-    <p class="tip">仅保存1个, 存储容量受KV限制(25MB)</p>
+    <p class="tip">仅保存1个 · KV 单文件限制 25MB</p>
     <label class="upload-btn" for="file">上传文件</label>
     <input type="file" id="file">
     <div id="status"></div>
