@@ -20,7 +20,8 @@ export default {
       await env.FILE_KV.put(KV_KEY, buf, {
         metadata: { name: file.name, size: file.size }
       });
-      return resMsg("上传成功");
+      // 上传成功不返回文字
+      return new Response("ok");
     }
 
     if (url.pathname === "/download") {
@@ -36,7 +37,7 @@ export default {
 
     if (url.pathname === "/delete") {
       await env.FILE_KV.delete(KV_KEY);
-      return resMsg("已删除");
+      return new Response("ok");
     }
 
     if (url.pathname === "/info") {
@@ -75,10 +76,9 @@ body{max-width:450px;margin:60px auto;padding:0 20px}
 button{padding:9px 18px;border:none;border-radius:8px;cursor:pointer;margin:6px 4px}
 .btn-blue{background:#3b82f6;color:#fff}
 .btn-red{background:#ef4444;color:#fff}
-#status{margin-top:12px;color:#16a34a}
+#status{margin-top:12px;color:#ef4444}
 #uploadArea, #fileArea{display:none}
 
-/* 修复：只点按钮才能选文件，不点空白触发 */
 input[type="file"]{
   width: 1px;
   height: 1px;
@@ -88,7 +88,6 @@ input[type="file"]{
   z-index: -1;
 }
 
-/* 上传按钮样式 */
 .upload-btn{
   display: inline-block;
   padding:9px 18px;
@@ -131,11 +130,12 @@ async function loadInfo(){
   
   const uploadArea = document.getElementById('uploadArea');
   const fileArea = document.getElementById('fileArea');
-  const fileInfo = document.getElementById('fileInfo');
+  const status = document.getElementById('status');
 
   if(!d.exist){
     uploadArea.style.display = 'block';
     fileArea.style.display = 'none';
+    status.innerText = '';
     return;
   }
 
@@ -144,33 +144,30 @@ async function loadInfo(){
   fileInfo.innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
-// 选择文件自动上传
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
-  
-  status('上传中...','#3b82f6');
+
   const fd = new FormData();
   fd.append('file', f);
   
   const res = await fetch('/upload', { method:'POST', body:fd });
-  status(await res.text(), res.ok ? 'green' : 'red');
-  
+  const text = await res.text();
+
+  // 只报错不提示成功
+  if(!res.ok){
+    document.getElementById('status').innerText = text;
+  }else{
+    document.getElementById('status').innerText = '';
+  }
   setTimeout(loadInfo, 600);
 });
 
 function download(){window.location.href='/download'}
 
 async function delFile(){
-  if(!confirm('确定删除？'))return;
   await fetch('/delete');
-  // 不显示提示，直接刷新
   loadInfo();
-}
-
-function status(txt,c){
-  const el=document.getElementById('status');
-  el.innerText=txt;el.style.color=c;
 }
 
 window.onload=loadInfo;
