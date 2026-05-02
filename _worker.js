@@ -112,10 +112,10 @@ html,body{
   gap:8px;
 }
 
-/* ========== 关键修复：文件页布局改为从顶部开始 ========== */
+/* ========== 关键修复：调整文件页内边距和间距 ========== */
 #fileArea.box {
   justify-content: flex-start;
-  padding-top: 40px; /* 让标题从顶部往下40px开始 */
+  padding: 30px 32px 24px; /* 调整上下内边距，避免底部被截断 */
 }
 
 h3{
@@ -130,16 +130,15 @@ h3{
   text-align:center;
 }
 
-/* 文件页标题单独调整，完美居中 */
 #fileArea h3 {
-  margin: 0 0 24px 0;
+  margin: 0 0 20px 0; /* 减少标题下方间距 */
 }
 
 .info{
   background:rgba(255,255,255,0.6);
   padding:14px 18px;
   border-radius:10px;
-  margin:0 0 20px 0;
+  margin:0 0 16px 0; /* 减少文件名框下方间距 */
   text-align:center;
   font-size:15px;
   line-height:1.5;
@@ -155,7 +154,7 @@ button,.upload-btn{
   font-size:15px;
   font-weight:500;
   cursor:pointer;
-  margin:6px 0;
+  margin:4px 0; /* 减少按钮上下间距 */
   background:#3b82f6;
   color:#fff;
   text-align:center;
