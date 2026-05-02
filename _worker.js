@@ -57,7 +57,7 @@ export default {
   }
 };
 
-function resMsg(text, status = 200) {
+function resMsg(text, status = 20) {
   return new Response(text, { status });
 }
 
@@ -74,41 +74,36 @@ function pageHtml() {
 
 html,body{
   width:100%;
-  min-height:100vh;
+  height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
   background: linear-gradient(135deg, rgb(255, 100, 180) 0%, rgb(200, 150, 255) 50%, rgb(0, 255, 255) 100%);
   background-attachment:fixed;
-  padding:20px 0;
 }
 
-/* 外层：宽度限制为窗口 1/3，上下加安全边距 */
 .container {
-  width: 100%;
-  max-width: 33vw;
-  max-height: calc(100vh - 40px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width:100%;
+  max-width:33vw;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-/* 卡片：基础高度为窗口 1/3，可自动撑高，低高度下也不会溢出 */
 .box {
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.6);
-  border-radius: 16px;
-  padding: 28px 32px;
-  width: 100%;
-  min-height: 33vh;
-  max-height: calc(100vh - 80px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  overflow-y: auto;
+  background:rgba(255,255,255,0.55);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.6);
+  border-radius:16px;
+  padding:28px 32px;
+  width:100%;
+  height:33vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  box-shadow:0 8px 32px rgba(0,0,0,0.1);
+  overflow:hidden;
 }
 
 h3{
@@ -133,9 +128,8 @@ h3{
   text-align:center;
   font-size:15px;
   line-height:1.5;
-  white-space: pre-wrap;
-  word-break: break-word;
-  width: 100%;
+  white-space:pre-wrap;
+  word-break:break-word;
 }
 
 button,.upload-btn{
