@@ -90,7 +90,7 @@ function inputHtml() {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>创建文件空间</title>
 <style>
-* {margin:0;padding:0;box-sizing:border-box;font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;}
+* {margin:0;padding:0;box-sizing:border-box;font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto sans-serif;}
 body {
   min-height:100vh;display:flex;align-items:center;justify-content:center;
   background: linear-gradient(135deg, rgb(255, 100, 180) 0%, rgb(200, 150, 255) 50%, rgb(0, 255, 255) 100%);
@@ -157,7 +157,7 @@ function pageHtml(encodedKey, rawKey, origin) {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto sans-serif;
 }
 body {
   min-height: 100vh;
@@ -190,6 +190,12 @@ body {
   color: #dc2626;
   font-size: 14px;
   text-align: center;
+  line-height: 1.6;
+}
+.space-key {
+  word-break: break-all;
+  max-width: 32ch;
+  margin: 0 auto 4px;
 }
 .file-info {
   background: rgba(255, 255, 255, 0.7);
@@ -284,7 +290,10 @@ input[type="range"]::-webkit-slider-thumb {
 <body>
 <div id="uploadArea" class="card">
   <h2 class="card-title">上传文件</h2>
-  <p class="tip">空间标识: ${rawKey} | 单文件最大25MB</p>
+  <p class="tip">
+    <span class="space-key">空间标识: ${rawKey}</span>
+    单文件最大25MB
+  </p>
   
   <div class="slider-container">
     <div class="slider-label">文件有效期：<span id="ttlText">30分钟</span></div>
@@ -314,7 +323,6 @@ input[type="range"]::-webkit-slider-thumb {
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
 
-// 新增1分钟测试选项，共6个档位
 const ttlOptions = [
   { text: '5分钟', value: 300 },
   { text: '30分钟', value: 1800 },
@@ -372,7 +380,6 @@ function formatDate(timestamp) {
   });
 }
 
-// 分两行显示：有效期剩余 + 过期时间
 function updateExpiryDisplay(expiration) {
   const now = Math.floor(Date.now()/1000);
   const remaining = expiration - now;
@@ -385,7 +392,6 @@ function updateExpiryDisplay(expiration) {
   
   const ttlText = fmtTime(remaining);
   const expiryDate = formatDate(expiration);
-  // 核心修改：换行分隔两行显示
   document.getElementById('fileExpiryInfo').innerText = 
     \`剩余有效期：\${ttlText}\\n过期时间：\${expiryDate}\`;
 }
