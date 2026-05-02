@@ -163,7 +163,7 @@ button,.upload-btn{
 
 .btn-red{
   background:#ef4444;
-  margin-bottom: 24px; /* 关键：给删除按钮加固定底部留白 */
+  margin-bottom: 50px; /* 关键：给删除按钮加固定底部留白 */
 }
 
 #status{
