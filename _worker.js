@@ -27,9 +27,15 @@ export default {
         const file = form.get("file");
         const ttl = parseInt(form.get('ttl')) || 1800;
         const buf = await file.arrayBuffer();
+        const expiration = Math.floor(Date.now()/1000) + ttl; // 计算过期时间戳(秒)
         
         await env.FILE_KV.put(KV_KEY, buf, {
-          metadata: { name: file.name, size: file.size },
+          metadata: { 
+            name: file.name, 
+            size: file.size,
+            ttl: ttl, // 存储TTL值
+            expiration: expiration // 存储过期时间戳
+          },
           expirationTtl: ttl
         });
         return new Response("ok");
@@ -59,7 +65,9 @@ export default {
       return new Response(JSON.stringify({
         exist: !!metadata,
         name: metadata?.name || "",
-        size: metadata?.size || 0
+        size: metadata?.size || 0,
+        ttl: metadata?.ttl || 0, // 返回TTL值
+        expiration: metadata?.expiration || 0 // 返回过期时间戳
       }), {
         headers: { "Content-Type": "application/json" }
       });
@@ -196,6 +204,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+}
+.expiry-info {
+  color: #ef4444;
+  margin-top: 8px;
+  font-size: 14px;
 }
 .btn-group {
   display: flex;
@@ -284,7 +298,10 @@ input[type="range"]::-webkit-slider-thumb {
 
 <div id="fileArea" class="card">
   <h2 class="card-title">当前文件</h2>
-  <div class="file-info" id="fileInfo"></div>
+  <div class="file-info">
+    <div id="fileBasicInfo"></div>
+    <div id="fileExpiryInfo" class="expiry-info"></div>
+  </div>
   <div class="btn-group">
     <button class="btn btn-primary" onclick="download()">下载文件</button>
     <button class="btn btn-success" onclick="share()">分享链接</button>
@@ -307,6 +324,7 @@ const ttlOptions = [
 const slider = document.getElementById('ttlSlider');
 const ttlText = document.getElementById('ttlText');
 let currentTtl = ttlOptions[0].value;
+let expiryInterval;
 
 slider.addEventListener('input', () => {
   const index = parseInt(slider.value);
@@ -324,6 +342,49 @@ function fmtSize(b){
   return (b/1048576).toFixed(2)+'MB';
 }
 
+function fmtTime(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400)/3600);
+  const m = Math.floor((seconds % 3600)/60);
+  const s = seconds % 60;
+  
+  let parts = [];
+  if (d > 0) parts.push(d + '天');
+  if (h > 0) parts.push(h + '小时');
+  if (m > 0) parts.push(m + '分钟');
+  if (s > 0 || parts.length === 0) parts.push(s + '秒');
+  
+  return parts.join(' ');
+}
+
+function formatDate(timestamp) {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+}
+
+function updateExpiryDisplay(expiration) {
+  const now = Math.floor(Date.now()/1000);
+  const remaining = expiration - now;
+  
+  if (remaining <= 0) {
+    document.getElementById('fileExpiryInfo').innerText = '文件已过期';
+    clearInterval(expiryInterval);
+    return;
+  }
+  
+  const ttlText = fmtTime(remaining);
+  const expiryDate = formatDate(expiration);
+  document.getElementById('fileExpiryInfo').innerText = 
+    \`有效期剩余: \${ttlText} | 过期时间: \${expiryDate}\`;
+}
+
 async function loadInfo(){
   const res=await fetch(basePath+'/info');
   const d=await res.json();
@@ -336,11 +397,25 @@ async function loadInfo(){
     uploadArea.style.display = 'flex';
     fileArea.style.display = 'none';
     status.innerText = '';
+    clearInterval(expiryInterval);
     return;
   }
+  
   uploadArea.style.display = 'none';
   fileArea.style.display = 'flex';
-  document.getElementById('fileInfo').innerText = d.name+'\\n大小: '+fmtSize(d.size);
+  document.getElementById('fileBasicInfo').innerText = d.name+'\\n大小: '+fmtSize(d.size);
+  
+  // 显示过期信息
+  if (d.expiration) {
+    updateExpiryDisplay(d.expiration);
+    // 每秒更新一次倒计时
+    if (expiryInterval) clearInterval(expiryInterval);
+    expiryInterval = setInterval(() => {
+      updateExpiryDisplay(d.expiration);
+    }, 1000);
+  } else {
+    document.getElementById('fileExpiryInfo').innerText = '无过期时间设置';
+  }
 }
 
 document.getElementById('file').addEventListener('change', async (e) => {
@@ -361,7 +436,11 @@ document.getElementById('file').addEventListener('change', async (e) => {
 });
 
 function download(){window.location.href=basePath+'/download'}
-async function delFile(){await fetch(basePath+'/delete');loadInfo();}
+async function delFile(){
+  await fetch(basePath+'/delete');
+  clearInterval(expiryInterval);
+  loadInfo();
+}
 
 async function share(){
   try {
@@ -373,6 +452,9 @@ async function share(){
 }
 
 window.onload=loadInfo;
+window.onbeforeunload = () => {
+  clearInterval(expiryInterval);
+};
 </script>
 </body>
 </html>
