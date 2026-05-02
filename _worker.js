@@ -10,21 +10,18 @@ export default {
       });
     }
 
-    // 上传：不判断大小, 直接尝试写入 KV, 失败就报错
     if (url.pathname === "/upload" && request.method === "POST") {
       try {
         const form = await request.formData();
         const file = form.get("file");
         const buf = await file.arrayBuffer();
 
-        // 直接尝试写入 KV, 超过 25MB 会自动抛错
         await env.FILE_KV.put(KV_KEY, buf, {
           metadata: { name: file.name, size: file.size }
         });
 
         return new Response("ok");
       } catch (err) {
-        // 无法写入 = 文件超过 KV 25MB 限制
         return resMsg("上传失败, 可能文件过大", 400);
       }
     }
@@ -74,52 +71,110 @@ function pageHtml() {
 <title>EdgeCache</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{max-width:450px;margin:60px auto;padding:0 20px}
-.box{border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:20px}
-.tip{color:#ef4444;font-size:14px;margin:8px 0}
-.info{background:#f9fafb;padding:12px;border-radius:8px;margin:12px 0}
-button{padding:9px 18px;border:none;border-radius:8px;cursor:pointer;margin:6px 4px}
+
+/* 全屏自适应布局核心 */
+html,body{
+  width:100%;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:#f9fafb;
+}
+
+/* 动态宽度：最大600px，小屏自动占满 */
+.container{
+  width:100%;
+  max-width:600px;
+  margin:0 auto;
+}
+
+.box{
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:32px;
+  margin-bottom:20px;
+  background:#fff;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* 动态字体大小 */
+h3{
+  font-size:clamp(18px,4vw,24px);
+  margin-bottom:12px;
+  color:#111827;
+}
+
+.tip{
+  color:#ef4444;
+  font-size:clamp(13px,2.5vw,15px);
+  margin:8px 0;
+  line-height:1.4;
+}
+
+.info{
+  background:#f9fafb;
+  padding:16px;
+  border-radius:10px;
+  margin:16px 0;
+  font-size:clamp(14px,3vw,16px);
+  line-height:1.6;
+  white-space:pre-wrap;
+}
+
+/* 按钮全屏自适应 */
+button,.upload-btn{
+  width:100%;
+  padding:14px 20px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  margin:8px 0;
+  font-size:clamp(15px,3.5vw,17px);
+  font-weight:500;
+  text-align:center;
+  transition:0.2s;
+}
+
 .btn-blue{background:#3b82f6;color:#fff}
 .btn-red{background:#ef4444;color:#fff}
-#status{margin-top:12px;color:#ef4444}
+.upload-btn{background:#3b82f6;color:#fff;display:inline-block}
+
+#status{
+  margin-top:16px;
+  color:#ef4444;
+  font-size:clamp(14px,3vw,16px);
+  text-align:center;
+  min-height:20px;
+}
+
 #uploadArea, #fileArea{display:none}
 
 input[type="file"]{
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  overflow: hidden;
-  position: absolute;
-  z-index: -1;
-}
-
-.upload-btn{
-  display: inline-block;
-  padding:9px 18px;
-  background:#3b82f6;
-  color:#fff;
-  border-radius:8px;
-  cursor:pointer;
-  margin:6px 0;
+  width:1px; height:1px; opacity:0;
+  overflow:hidden; position:absolute;
+  z-index:-1;
 }
 </style>
 </head>
 <body>
 
-<div id="uploadArea" class="box">
-  <h3>上传文件</h3>
-  <p class="tip">仅保存1个, 存储容量受KV限制(25MB)</p>
-  
-  <label class="upload-btn" for="file">上传文件</label>
-  <input type="file" id="file">
-  <div id="status"></div>
-</div>
+<div class="container">
+  <div id="uploadArea" class="box">
+    <h3>上传文件</h3>
+    <p class="tip">仅保存1个, 存储容量受KV限制(25MB)</p>
+    <label class="upload-btn" for="file">上传文件</label>
+    <input type="file" id="file">
+    <div id="status"></div>
+  </div>
 
-<div id="fileArea" class="box">
-  <h3>当前文件</h3>
-  <div class="info" id="fileInfo"></div>
-  <button class="btn-blue" onclick="download()">下载</button>
-  <button class="btn-red" onclick="delFile()">删除</button>
+  <div id="fileArea" class="box">
+    <h3>当前文件</h3>
+    <div class="info" id="fileInfo"></div>
+    <button class="btn-blue" onclick="download()">下载</button>
+    <button class="btn-red" onclick="delFile()">删除</button>
+  </div>
 </div>
 
 <script>
@@ -149,7 +204,6 @@ async function loadInfo(){
   document.getElementById('fileInfo').innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
-// 完全不判断大小, 直接上传
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
