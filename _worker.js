@@ -25,9 +25,12 @@ export default {
       try {
         const form = await request.formData();
         const file = form.get("file");
+        const ttl = parseInt(form.get('ttl')) || 1800;
         const buf = await file.arrayBuffer();
+        
         await env.FILE_KV.put(KV_KEY, buf, {
-          metadata: { name: file.name, size: file.size }
+          metadata: { name: file.name, size: file.size },
+          expirationTtl: ttl
         });
         return new Response("ok");
       } catch (err) {
@@ -235,12 +238,44 @@ input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
+.slider-container {
+  width: 100%;
+  padding: 10px 0;
+}
+.slider-label {
+  text-align: center;
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 8px;
+}
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+  background: #ddd;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+}
 </style>
 </head>
 <body>
 <div id="uploadArea" class="card">
   <h2 class="card-title">上传文件</h2>
   <p class="tip">空间标识: ${rawKey} | 单文件最大25MB</p>
+  
+  <div class="slider-container">
+    <div class="slider-label">文件有效期：<span id="ttlText">30分钟</span></div>
+    <input type="range" id="ttlSlider" min="0" max="4" value="0" step="1">
+  </div>
+
   <label class="upload-btn" for="file">选择文件上传</label>
   <input type="file" id="file">
   <button class="btn btn-secondary" onclick="backToInput()">上一步</button>
@@ -260,6 +295,24 @@ input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
 <script>
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
+
+const ttlOptions = [
+  { text: '30分钟', value: 1800 },
+  { text: '1小时', value: 3600 },
+  { text: '6小时', value: 21600 },
+  { text: '12小时', value: 43200 },
+  { text: '1天', value: 86400 }
+];
+
+const slider = document.getElementById('ttlSlider');
+const ttlText = document.getElementById('ttlText');
+let currentTtl = ttlOptions[0].value;
+
+slider.addEventListener('input', () => {
+  const index = parseInt(slider.value);
+  ttlText.innerText = ttlOptions[index].text;
+  currentTtl = ttlOptions[index].value;
+});
 
 function backToInput(){
   window.location.href = '/';
@@ -295,6 +348,7 @@ document.getElementById('file').addEventListener('change', async (e) => {
   if(!f) return;
   const fd = new FormData();
   fd.append('file', f);
+  fd.append('ttl', currentTtl);
   
   const res = await fetch(basePath+'/upload', { method:'POST', body:fd });
   const text = await res.text();
