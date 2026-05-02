@@ -37,7 +37,7 @@ export default {
         });
         return new Response("ok");
       } catch (err) {
-        return resMsg("上传失败，文件可能超过25MB", 400);
+        return resMsg("上传失败, 文件可能超过25MB", 400);
       }
     }
 
@@ -118,10 +118,10 @@ input:focus {border-color:#3b82f6;}
 </head>
 <body>
 <div class="card">
-  <h2 class="title">创建专属文件空间</h2>
-  <p class="tip">输入自定义标识（支持中文），编码后最长64字符</p>
-  <input type="text" id="key" placeholder="例如：我的文件、test、文档123" autocomplete="off">
-  <button class="btn" onclick="go()">进入空间</button>
+  <h2 class="title">进入专属文件空间</h2>
+  <p class="tip">输入自定义标识, 无用时建议顺手删文件</p>
+  <input type="text" id="key" placeholder="例: test1、测试1" autocomplete="off">
+  <button class="btn" onclick="go()">下一步</button>
 </div>
 <script>
 // 前端校验：编码后长度≤64
@@ -130,7 +130,7 @@ function go(){
   if(!key) {alert('请输入标识');return;}
   const encoded = encodeURIComponent(key);
   if(encoded.length > 64){
-    alert('标识过长！编码后最多允许64个字符');
+    alert('编码后最多允许64个字符!');
     return;
   }
   window.location.href = '/' + encoded + '/';
@@ -256,7 +256,7 @@ input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
   <p class="tip">空间标识：${rawKey} | 单文件最大25MB</p>
   <label class="upload-btn" for="file">选择文件上传</label>
   <input type="file" id="file">
-  <button class="btn btn-secondary" onclick="backToInput()">返回输入自定义标识</button>
+  <button class="btn btn-secondary" onclick="backToInput()">上一步</button>
   <div id="status"></div>
 </div>
 
@@ -328,7 +328,7 @@ async function share(){
     await navigator.clipboard.writeText(shareUrl);
     alert('链接复制成功！');
   } catch (e) {
-    alert('复制失败，请手动复制：'+shareUrl);
+    alert('复制失败, 请手动复制：'+shareUrl);
   }
 }
 
