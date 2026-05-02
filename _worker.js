@@ -102,7 +102,6 @@ html,body{
   flex-direction:column;
   justify-content:center;
   box-shadow:0 8px 32px rgba(0,0,0,0.1);
-  overflow:hidden;
 }
 
 #uploadArea.box{
@@ -112,10 +111,10 @@ html,body{
   gap:8px;
 }
 
-/* 文件页布局 */
+/* 文件页布局：关键修改 */
 #fileArea.box {
   justify-content: flex-start;
-  padding: 30px 32px 0; /* 去掉底部内边距，改用按钮下边距控制 */
+  padding: 30px 32px 24px; /* 底部固定24px留白 */
 }
 
 h3{
@@ -163,7 +162,14 @@ button,.upload-btn{
 
 .btn-red{
   background:#ef4444;
-  margin-bottom: 50px; /* 关键：给删除按钮加固定底部留白 */
+}
+
+/* 关键：按钮组弹性定位 */
+.button-group {
+  margin-top: auto; /* 让按钮组自动被推到卡片底部上方 */
+  display:flex;
+  flex-direction:column;
+  gap:4px;
 }
 
 #status{
@@ -197,8 +203,11 @@ input[type="file"]{
   <div id="fileArea" class="box">
     <h3>当前文件</h3>
     <div class="info" id="fileInfo"></div>
-    <button class="btn-blue" onclick="download()">下载</button>
-    <button class="btn-red" onclick="delFile()">删除</button>
+    <!-- 把按钮包进.button-group里 -->
+    <div class="button-group">
+      <button class="btn-blue" onclick="download()">下载</button>
+      <button class="btn-red" onclick="delFile()">删除</button>
+    </div>
   </div>
 </div>
 
