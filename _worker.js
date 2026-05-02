@@ -249,7 +249,7 @@ async function loadInfo(){
 
   uploadArea.style.display = 'none';
   fileArea.style.display = 'flex';
-  document.getElementById('fileInfo').innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
+  document.getElementById('fileInfo').innerText = d.name+'\\n大小：'+fmtSize(d.size);
 }
 
 // 上传文件
