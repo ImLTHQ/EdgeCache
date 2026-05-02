@@ -82,92 +82,72 @@ html,body{
   background-attachment:fixed;
 }
 
-/* 文件页卡片 保持原放大25%尺寸不变 */
-#fileArea.box {
-  width: 525px;
-  height: 400px;
-  padding: 38px;
-  border-radius: 20px;
-}
-
-/* 上传页 单独自定义尺寸，不和文件页一致 */
-#uploadArea.box {
-  width: 525px;
-  height: 360px;
-  padding: 32px;
-  border-radius: 20px;
-  /* 内容垂直居中，保留合理上下间距，只减少底部多余空位 */
-  justify-content: center;
-  gap: 16px;
+.container {
+  width:100%;
+  max-width:33vw;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .box {
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.6);
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  overflow: hidden;
+  background:rgba(255,255,255,0.55);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.6);
+  border-radius:16px;
+  padding:28px 32px;
+  width:100%;
+  height:33vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  box-shadow:0 8px 32px rgba(0,0,0,0.1);
+  overflow:hidden;
 }
 
-/* 上传页文字样式 */
-#uploadArea h3 {
-  font-size: 28px;
+/* ========== 只修改这里：上传页面卡片 ========== */
+#uploadArea {
+  height: 28vh !important;   /* 卡片高度变小 */
+  gap: 12px;                 /* 内部元素间距缩小 */
+}
+/* ============================================== */
+
+h3{
+  font-size:22px;
+  margin-bottom:10px;
   color:#111;
   text-align:center;
-  margin: 0;
 }
 
-#uploadArea .tip{
+.tip{
   color:#dc2626;
-  font-size: 18px;
+  font-size:14px;
   text-align:center;
-  margin: 0;
-}
-
-/* 文件页样式 完全保留原样 */
-.file-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.file-wrap h3 {
-  font-size: 28px;
-  color:#111;
-  text-align:center;
-  margin: 0 0 24px 0;
+  margin-bottom:20px;
 }
 
 .info{
   background:rgba(255,255,255,0.6);
-  padding:18px 22px;
-  border-radius:12px;
-  margin:0;
+  padding:14px 18px;
+  border-radius:10px;
+  margin:14px 0;
   text-align:center;
-  font-size: 19px;
+  font-size:15px;
   line-height:1.5;
-  white-space: pre-wrap;
-  word-break: break-word;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100px;
+  white-space:pre-wrap;
+  word-break:break-word;
 }
 
 button,.upload-btn{
   width:100%;
-  padding:18px;
+  padding:14px;
   border:none;
-  border-radius:15px;
-  font-size: 19px;
+  border-radius:12px;
+  font-size:15px;
   font-weight:500;
   cursor:pointer;
-  margin:0;
+  margin:6px 0;
   background:#3b82f6;
   color:#fff;
   text-align:center;
@@ -179,11 +159,11 @@ button,.upload-btn{
 }
 
 #status{
+  margin-top:16px;
   color:#dc2626;
-  font-size: 18px;
+  font-size:14px;
   text-align:center;
-  min-height:24px;
-  margin: 0;
+  min-height:20px;
 }
 
 #uploadArea, #fileArea{
@@ -197,21 +177,21 @@ input[type="file"]{
 </head>
 <body>
 
-<div id="uploadArea" class="box">
-  <h3>上传文件</h3>
-  <p class="tip">仅保存1个 · KV 单文件限制 25MB</p>
-  <label class="upload-btn" for="file">上传文件</label>
-  <input type="file" id="file">
-  <div id="status"></div>
-</div>
+<div class="container">
+  <div id="uploadArea" class="box">
+    <h3>上传文件</h3>
+    <p class="tip">仅保存1个 · KV 单文件限制 25MB</p>
+    <label class="upload-btn" for="file">上传文件</label>
+    <input type="file" id="file">
+    <div id="status"></div>
+  </div>
 
-<div id="fileArea" class="box">
-  <div class="file-wrap">
+  <div id="fileArea" class="box">
     <h3>当前文件</h3>
     <div class="info" id="fileInfo"></div>
+    <button class="btn-blue" onclick="download()">下载</button>
+    <button class="btn-red" onclick="delFile()">删除</button>
   </div>
-  <button class="btn-blue" onclick="download()">下载</button>
-  <button class="btn-red" onclick="delFile()">删除</button>
 </div>
 
 <script>
@@ -270,5 +250,5 @@ window.onload=loadInfo;
 </script>
 </body>
 </html>
-`;
+  `;
 }
