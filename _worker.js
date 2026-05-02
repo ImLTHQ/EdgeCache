@@ -4,29 +4,23 @@ export default {
     const origin = url.origin;
     const pathParts = url.pathname.split('/').filter(Boolean);
 
-    // 取出路径中【已编码】的key
     const encodedKey = pathParts[0] || '';
-    // 限制: 编码后的key 最大64个字符
     const MAX_ENCODED_LENGTH = 64;
 
-    // 无标识 / 标识超长 → 跳转到输入页
     if (url.pathname === '/' || !encodedKey || encodedKey.length > MAX_ENCODED_LENGTH) {
       return new Response(inputHtml(), {
         headers: { "Content-Type": "text/html;charset=utf-8" }
       });
     }
 
-    // KV存储用【解码后的原文】
     const KV_KEY = decodeURIComponent(encodedKey);
 
-    // 主页面 /{encodedKey}/
     if (pathParts.length === 1) {
       return new Response(pageHtml(encodedKey, KV_KEY, origin), {
         headers: { "Content-Type": "text/html;charset=utf-8" }
       });
     }
 
-    // 上传接口
     if (pathParts[1] === "upload" && request.method === "POST") {
       try {
         const form = await request.formData();
@@ -41,7 +35,6 @@ export default {
       }
     }
 
-    // 下载接口
     if (pathParts[1] === "download") {
       const { value, metadata } = await env.FILE_KV.getWithMetadata(KV_KEY, "arrayBuffer");
       if (!value) return resMsg("未找到文件", 404);
@@ -53,13 +46,11 @@ export default {
       });
     }
 
-    // 删除接口
     if (pathParts[1] === "delete") {
       await env.FILE_KV.delete(KV_KEY);
       return new Response("ok");
     }
 
-    // 获取信息接口
     if (pathParts[1] === "info") {
       const { metadata } = await env.FILE_KV.getWithMetadata(KV_KEY);
       return new Response(JSON.stringify({
@@ -79,7 +70,6 @@ function resMsg(text, status = 200) {
   return new Response(text, { status });
 }
 
-// 输入标识页面（前端新增编码长度校验）
 function inputHtml() {
   return `
 <!DOCTYPE html>
@@ -124,7 +114,6 @@ input:focus {border-color:#3b82f6;}
   <button class="btn" onclick="go()">下一步</button>
 </div>
 <script>
-// 前端校验: 编码后长度≤64
 function go(){
   const key = document.getElementById('key').value.trim();
   if(!key) {alert('请输入标识');return;}
@@ -141,7 +130,6 @@ function go(){
 `;
 }
 
-// 主页面（新增返回按钮 + 保持所有功能）
 function pageHtml(encodedKey, rawKey, origin) {
   const shareUrl = `${origin}/${encodedKey}/`;
   const basePath = `/${encodedKey}`;
@@ -250,7 +238,6 @@ input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
 </style>
 </head>
 <body>
-<!-- 上传区域: 新增【返回输入标识】按钮 -->
 <div id="uploadArea" class="card">
   <h2 class="card-title">上传文件</h2>
   <p class="tip">空间标识: ${rawKey} | 单文件最大25MB</p>
@@ -274,7 +261,6 @@ input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
 
-// 返回输入标识页面
 function backToInput(){
   window.location.href = '/';
 }
