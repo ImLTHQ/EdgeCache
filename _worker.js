@@ -10,14 +10,14 @@ export default {
       });
     }
 
-    // 上传：不判断大小，直接尝试写入 KV，失败就报错
+    // 上传：不判断大小, 直接尝试写入 KV, 失败就报错
     if (url.pathname === "/upload" && request.method === "POST") {
       try {
         const form = await request.formData();
         const file = form.get("file");
         const buf = await file.arrayBuffer();
 
-        // 直接尝试写入 KV，超过 25MB 会自动抛错
+        // 直接尝试写入 KV, 超过 25MB 会自动抛错
         await env.FILE_KV.put(KV_KEY, buf, {
           metadata: { name: file.name, size: file.size }
         });
@@ -25,13 +25,13 @@ export default {
         return new Response("ok");
       } catch (err) {
         // 无法写入 = 文件超过 KV 25MB 限制
-        return resMsg("文件过大，无法存储", 400);
+        return resMsg("上传失败, 可能文件过大", 400);
       }
     }
 
     if (url.pathname === "/download") {
       const { value, metadata } = await env.FILE_KV.getWithMetadata(KV_KEY, "arrayBuffer");
-      if (!value) return resMsg("无文件", 404);
+      if (!value) return resMsg("未上传文件", 404);
       return new Response(value, {
         headers: {
           "Content-Type": "application/octet-stream",
@@ -108,7 +108,7 @@ input[type="file"]{
 
 <div id="uploadArea" class="box">
   <h3>上传文件</h3>
-  <p class="tip">仅保存1个，KV 自动限制最大25MB</p>
+  <p class="tip">仅保存1个, 存储容量受KV限制(25MB)</p>
   
   <label class="upload-btn" for="file">上传文件</label>
   <input type="file" id="file">
@@ -149,7 +149,7 @@ async function loadInfo(){
   document.getElementById('fileInfo').innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
-// 完全不判断大小，直接上传
+// 完全不判断大小, 直接上传
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
