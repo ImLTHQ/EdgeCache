@@ -25,7 +25,7 @@ export default {
       try {
         const form = await request.formData();
         const file = form.get("file");
-        const ttl = parseInt(form.get('ttl')) || 60;
+        const ttl = parseInt(form.get('ttl')) || 1800;
         const buf = await file.arrayBuffer();
         const expiration = Math.floor(Date.now()/1000) + ttl;
         
@@ -287,8 +287,8 @@ input[type="range"]::-webkit-slider-thumb {
   <p class="tip">空间标识: ${rawKey} | 单文件最大25MB</p>
   
   <div class="slider-container">
-    <div class="slider-label">文件有效期：<span id="ttlText">1分钟(测试)</span></div>
-    <input type="range" id="ttlSlider" min="0" max="5" value="0" step="1">
+    <div class="slider-label">文件有效期：<span id="ttlText">30分钟</span></div>
+    <input type="range" id="ttlSlider" min="0" max="5" value="1" step="1">
   </div>
 
   <label class="upload-btn" for="file">选择文件上传</label>
@@ -316,7 +316,7 @@ const shareUrl = "${shareUrl}";
 
 // 新增1分钟测试选项，共6个档位
 const ttlOptions = [
-  { text: '1分钟(测试)', value: 60 },
+  { text: '5分钟', value: 300 },
   { text: '30分钟', value: 1800 },
   { text: '1小时', value: 3600 },
   { text: '6小时', value: 21600 },
