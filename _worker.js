@@ -284,7 +284,7 @@ input[type="range"]::-webkit-slider-thumb {
 <body>
 <div id="uploadArea" class="card">
   <h2 class="card-title">上传文件</h2>
-  <p class="tip">空间标识: ${rawKey} | 单文件最大25MB</p>
+  <p class="tip">空间标识: <span id="spaceKey"></span><br>单文件最大25MB</p>
   
   <div class="slider-container">
     <div class="slider-label">文件有效期：<span id="ttlText">30分钟</span></div>
@@ -313,6 +313,10 @@ input[type="range"]::-webkit-slider-thumb {
 <script>
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
+const rawKey = "${rawKey}";
+
+// 标识名每32字符换行
+document.getElementById('spaceKey').innerText = rawKey.replace(/(.{32})/g, '$1\n');
 
 // 新增1分钟测试选项，共6个档位
 const ttlOptions = [
