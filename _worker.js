@@ -25,16 +25,16 @@ export default {
       try {
         const form = await request.formData();
         const file = form.get("file");
-        const ttl = parseInt(form.get('ttl')) || 1800;
+        const ttl = parseInt(form.get('ttl')) || 60;
         const buf = await file.arrayBuffer();
-        const expiration = Math.floor(Date.now()/1000) + ttl; // 计算过期时间戳(秒)
+        const expiration = Math.floor(Date.now()/1000) + ttl;
         
         await env.FILE_KV.put(KV_KEY, buf, {
           metadata: { 
             name: file.name, 
             size: file.size,
-            ttl: ttl, // 存储TTL值
-            expiration: expiration // 存储过期时间戳
+            ttl: ttl,
+            expiration: expiration
           },
           expirationTtl: ttl
         });
@@ -66,8 +66,8 @@ export default {
         exist: !!metadata,
         name: metadata?.name || "",
         size: metadata?.size || 0,
-        ttl: metadata?.ttl || 0, // 返回TTL值
-        expiration: metadata?.expiration || 0 // 返回过期时间戳
+        ttl: metadata?.ttl || 0,
+        expiration: metadata?.expiration || 0
       }), {
         headers: { "Content-Type": "application/json" }
       });
@@ -197,19 +197,20 @@ body {
   border-radius: 12px;
   text-align: center;
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.8;
   word-break: break-all;
   white-space: pre-wrap;
-  min-height: 60px;
+  min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  gap: 8px;
 }
 .expiry-info {
   color: #ef4444;
-  margin-top: 8px;
   font-size: 14px;
+  line-height: 1.6;
 }
 .btn-group {
   display: flex;
@@ -286,8 +287,8 @@ input[type="range"]::-webkit-slider-thumb {
   <p class="tip">空间标识: ${rawKey} | 单文件最大25MB</p>
   
   <div class="slider-container">
-    <div class="slider-label">文件有效期：<span id="ttlText">30分钟</span></div>
-    <input type="range" id="ttlSlider" min="0" max="4" value="0" step="1">
+    <div class="slider-label">文件有效期：<span id="ttlText">1分钟(测试)</span></div>
+    <input type="range" id="ttlSlider" min="0" max="5" value="0" step="1">
   </div>
 
   <label class="upload-btn" for="file">选择文件上传</label>
@@ -313,7 +314,9 @@ input[type="range"]::-webkit-slider-thumb {
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
 
+// 新增1分钟测试选项，共6个档位
 const ttlOptions = [
+  { text: '1分钟(测试)', value: 60 },
   { text: '30分钟', value: 1800 },
   { text: '1小时', value: 3600 },
   { text: '6小时', value: 21600 },
@@ -369,6 +372,7 @@ function formatDate(timestamp) {
   });
 }
 
+// 分两行显示：有效期剩余 + 过期时间
 function updateExpiryDisplay(expiration) {
   const now = Math.floor(Date.now()/1000);
   const remaining = expiration - now;
@@ -381,8 +385,9 @@ function updateExpiryDisplay(expiration) {
   
   const ttlText = fmtTime(remaining);
   const expiryDate = formatDate(expiration);
+  // 核心修改：换行分隔两行显示
   document.getElementById('fileExpiryInfo').innerText = 
-    \`有效期剩余: \${ttlText} | 过期时间: \${expiryDate}\`;
+    \`剩余有效期：\${ttlText}\\n过期时间：\${expiryDate}\`;
 }
 
 async function loadInfo(){
@@ -405,10 +410,8 @@ async function loadInfo(){
   fileArea.style.display = 'flex';
   document.getElementById('fileBasicInfo').innerText = d.name+'\\n大小: '+fmtSize(d.size);
   
-  // 显示过期信息
   if (d.expiration) {
     updateExpiryDisplay(d.expiration);
-    // 每秒更新一次倒计时
     if (expiryInterval) clearInterval(expiryInterval);
     expiryInterval = setInterval(() => {
       updateExpiryDisplay(d.expiration);
