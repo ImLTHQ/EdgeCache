@@ -21,7 +21,7 @@ export default {
       await env.FILE_KV.put(KV_KEY, buf, {
         metadata: { name: file.name, size: file.size }
       });
-      return resMsg("上传成功，已覆盖");
+      return resMsg("上传成功");
     }
 
     if (url.pathname === "/download") {
@@ -73,7 +73,7 @@ body{max-width:450px;margin:60px auto;padding:0 20px}
 .box{border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:20px}
 .tip{color:#ef4444;font-size:14px;margin:8px 0}
 .info{background:#f9fafb;padding:12px;border-radius:8px;margin:12px 0}
-button{padding:9px 18px;border:none;border-radius:8px;cursor-pointer;margin:6px 4px}
+button{padding:9px 18px;border:none;border-radius:8px;cursor:pointer;margin:6px 4px}
 .btn-blue{background:#3b82f6;color:#fff}
 .btn-red{background:#ef4444;color:#fff}
 #status{margin-top:12px;color:#16a34a}
@@ -86,7 +86,6 @@ button{padding:9px 18px;border:none;border-radius:8px;cursor-pointer;margin:6px 
   <h3>上传文件</h3>
   <p class="tip">最大25MB，仅保存1个</p>
   <input type="file" id="file">
-  <div><button class="btn-blue" onclick="upload()">立即上传</button></div>
   <div id="status"></div>
 </div>
 
@@ -123,15 +122,20 @@ async function loadInfo(){
   fileInfo.innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
-async function upload(){
-  const f=document.getElementById('file').files[0];
-  if(!f)return status('请选择文件','red');
+// 选择文件后自动上传
+document.getElementById('file').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  if(!f) return;
+  
   status('上传中...','#3b82f6');
-  const fd=new FormData();fd.append('file',f);
-  const res=await fetch('/upload',{method:'POST',body:fd});
-  status(await res.text(), res.ok?'green':'red');
-  loadInfo();
-}
+  const fd = new FormData();
+  fd.append('file', f);
+  
+  const res = await fetch('/upload', { method:'POST', body:fd });
+  status(await res.text(), res.ok ? 'green' : 'red');
+  
+  setTimeout(loadInfo, 800);
+});
 
 function download(){window.location.href='/download'}
 async function delFile(){
