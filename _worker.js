@@ -88,7 +88,7 @@ function inputHtml() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>创建文件空间</title>
+<title>EdgeCache</title>
 <style>
 * {margin:0;padding:0;box-sizing:border-box;font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;}
 body {
@@ -120,7 +120,7 @@ input:focus {border-color:#3b82f6;}
 <body>
 <div class="card">
   <h2 class="title">进入专属文件空间</h2>
-  <p class="tip">输入自定义标识, 无用时建议顺手删文件</p>
+  <p class="tip">输入自定义标识, 用于鉴权</p>
   <input type="text" id="key" placeholder="例: test1、测试1" autocomplete="off">
   <button class="btn" onclick="go()">下一步</button>
 </div>
@@ -147,13 +147,13 @@ function pageHtml(encodedKey, rawKey, origin) {
     const regex = new RegExp(`(.{1,${maxLength}})`, 'g');
     return str.match(regex)?.join('\n') || str;
   }
-  // 处理标识，每32字符换行
+  // 处理标识, 每32字符换行
   const wrappedKey = wrapText(rawKey, 32);
   
   const shareUrl = `${origin}/${encodedKey}/`;
   const basePath = `/${encodedKey}`;
 
-  // ====================== 核心修改：判断换行，控制空间标识显示 ======================
+  // ====================== 核心修改：判断换行, 控制空间标识显示 ======================
   let tipContent;
   if (wrappedKey.includes('\n')) {
     // 标识有换行 → 空间标识独立一行
@@ -170,7 +170,7 @@ function pageHtml(encodedKey, rawKey, origin) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EdgeCache - ${rawKey}</title>
+<title>EdgeCache</title>
 <style>
 * {
   margin: 0;
@@ -335,7 +335,7 @@ input[type="range"]::-webkit-slider-thumb {
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
 
-// 新增1分钟测试选项，共6个档位
+// 新增1分钟测试选项, 共6个档位
 const ttlOptions = [
   { text: '5分钟', value: 300 },
   { text: '30分钟', value: 1800 },
