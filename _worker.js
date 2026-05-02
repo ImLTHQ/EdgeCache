@@ -14,13 +14,13 @@ export default {
     if (url.pathname === "/upload" && request.method === "POST") {
       const form = await request.formData();
       const file = form.get("file");
+      if (!file) return resMsg("请选择文件", 400);
       if (file.size > MAX_SIZE) return resMsg("文件超过25MB限制", 400);
 
       const buf = await file.arrayBuffer();
       await env.FILE_KV.put(KV_KEY, buf, {
         metadata: { name: file.name, size: file.size }
       });
-      // 上传成功不返回文字
       return new Response("ok");
     }
 
@@ -65,7 +65,7 @@ function pageHtml() {
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale==1">
 <title>EdgeCache 边缘缓存</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
@@ -118,6 +118,8 @@ input[type="file"]{
 </div>
 
 <script>
+const MAX_SIZE = 26214400;
+
 function fmtSize(b){
   if(b<1024)return b+'B';
   if(b<1048576)return (b/1024).toFixed(1)+'KB';
@@ -141,26 +143,29 @@ async function loadInfo(){
 
   uploadArea.style.display = 'none';
   fileArea.style.display = 'block';
-  fileInfo.innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
+  document.getElementById('fileInfo').innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
 
+  // 前端秒判断大小，不上传
+  if(f.size > MAX_SIZE){
+    document.getElementById('status').innerText = "文件超过25MB限制";
+    return;
+  }
+
+  document.getElementById('status').innerText = "";
+
   const fd = new FormData();
   fd.append('file', f);
   
   const res = await fetch('/upload', { method:'POST', body:fd });
-  const text = await res.text();
-
-  // 只报错不提示成功
   if(!res.ok){
-    document.getElementById('status').innerText = text;
-  }else{
-    document.getElementById('status').innerText = '';
+    document.getElementById('status').innerText = await res.text();
   }
-  setTimeout(loadInfo, 600);
+  loadInfo();
 });
 
 function download(){window.location.href='/download'}
