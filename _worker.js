@@ -14,7 +14,6 @@ export default {
     if (url.pathname === "/upload" && request.method === "POST") {
       const form = await request.formData();
       const file = form.get("file");
-      if (!file) return resMsg("未选择文件", 400);
       if (file.size > MAX_SIZE) return resMsg("文件超过25MB限制", 400);
 
       const buf = await file.arrayBuffer();
@@ -78,14 +77,26 @@ button{padding:9px 18px;border:none;border-radius:8px;cursor:pointer;margin:6px 
 .btn-red{background:#ef4444;color:#fff}
 #status{margin-top:12px;color:#16a34a}
 #uploadArea, #fileArea{display:none}
+/* 自定义文件选择框文字 */
+input[type="file"]{
+  color: transparent;
+}
+input[type="file"]::file-selector-button{
+  padding:8px 16px;
+  border:none;
+  border-radius:8px;
+  background:#3b82f6;
+  color:#fff;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
 
 <div id="uploadArea" class="box">
   <h3>上传文件</h3>
-  <p class="tip">最大25MB，仅保存1个</p>
-  <input type="file" id="file">
+  <p class="tip">最大25MB，仅保存1个，选择即自动上传</p>
+  <input type="file" id="file" title="上传文件">
   <div id="status"></div>
 </div>
 
@@ -122,7 +133,6 @@ async function loadInfo(){
   fileInfo.innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
-// 选择文件后自动上传
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
@@ -134,7 +144,7 @@ document.getElementById('file').addEventListener('change', async (e) => {
   const res = await fetch('/upload', { method:'POST', body:fd });
   status(await res.text(), res.ok ? 'green' : 'red');
   
-  setTimeout(loadInfo, 800);
+  setTimeout(loadInfo, 600);
 });
 
 function download(){window.location.href='/download'}
