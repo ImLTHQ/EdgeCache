@@ -78,76 +78,72 @@ html,body{
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:20px;
   background: linear-gradient(135deg, rgb(255, 100, 180) 0%, rgb(200, 150, 255) 50%, rgb(0, 255, 255) 100%);
   background-attachment:fixed;
 }
 
-.container{
-  width:100%;
-  /* 黄金适中占比：桌面不大不小 */
-  max-width:55vw;
-  max-height:65vh;
+/* 核心：高度固定为屏幕 1/3 */
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 33vh;
+  width: 100%;
+  padding: 0 20px;
 }
 
-.box{
-  background:rgba(255,255,255,0.55);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  border-radius:1rem;
-  padding:2.5rem;
-  width:100%;
-  height:100%;
-  border:1px solid rgba(255,255,255,0.6);
-  box-shadow:0 8px 32px rgba(0,0,0,0.1);
-}
-
-/* 小屏手机自动适配 */
-@media (max-width:768px){
-  .container{
-    max-width:90vw;
-    max-height:auto;
-  }
-  .box{
-    padding:2rem 1.5rem;
-  }
+/* 盒子：宽度自适应 + 最小最大限制 + 高度100% */
+.box {
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 16px;
+  padding: 28px 32px;
+  height: 100%;
+  min-width: 320px;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
 }
 
 h3{
-  font-size:clamp(20px,3vw,26px);
-  margin-bottom:12px;
+  font-size:22px;
+  margin-bottom:10px;
   color:#111;
   text-align:center;
 }
 
 .tip{
   color:#dc2626;
-  font-size:clamp(13px,2vw,15px);
+  font-size:14px;
   text-align:center;
   margin-bottom:20px;
 }
 
 .info{
   background:rgba(255,255,255,0.6);
-  padding:16px;
-  border-radius:12px;
-  margin:18px 0;
+  padding:14px 18px;
+  border-radius:10px;
+  margin:14px 0;
   text-align:center;
-  font-size:clamp(14px,2.5vw,17px);
-  line-height:1.6;
-  color:#222;
+  font-size:15px;
+  line-height:1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 button,.upload-btn{
   width:100%;
-  padding:15px;
+  padding:14px;
   border:none;
   border-radius:12px;
-  font-size:clamp(15px,2.5vw,17px);
+  font-size:15px;
   font-weight:500;
   cursor:pointer;
-  margin:8px 0;
-  transition:0.2s;
+  margin:6px 0;
   background:#3b82f6;
   color:#fff;
   text-align:center;
@@ -159,9 +155,9 @@ button,.upload-btn{
 }
 
 #status{
-  margin-top:18px;
+  margin-top:16px;
   color:#dc2626;
-  font-size:clamp(14px,2.5vw,16px);
+  font-size:14px;
   text-align:center;
   min-height:20px;
 }
@@ -171,11 +167,7 @@ button,.upload-btn{
 }
 
 input[type="file"]{
-  width:1px;
-  height:1px;
-  opacity:0;
-  position:absolute;
-  z-index:-1;
+  width:1px; height:1px; opacity:0; position:absolute; z-index:-1;
 }
 </style>
 </head>
@@ -214,14 +206,14 @@ async function loadInfo(){
   const status = document.getElementById('status');
 
   if(!d.exist){
-    uploadArea.style.display = 'block';
+    uploadArea.style.display = 'flex';
     fileArea.style.display = 'none';
     status.innerText = '';
     return;
   }
 
   uploadArea.style.display = 'none';
-  fileArea.style.display = 'block';
+  fileArea.style.display = 'flex';
   document.getElementById('fileInfo').innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
