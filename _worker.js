@@ -71,7 +71,7 @@ function pageHtml() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EdgeCache 边缘缓存</title>
+<title>EdgeCache</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{max-width:450px;margin:60px auto;padding:0 20px}
