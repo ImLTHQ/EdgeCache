@@ -4,26 +4,29 @@ export default {
     const origin = url.origin;
     const pathParts = url.pathname.split('/').filter(Boolean);
 
-    // 核心修复：从路径取出【已编码】的key，不二次编码
+    // 取出路径中【已编码】的key
     const encodedKey = pathParts[0] || '';
-    // KV存储用【解码后的原文】，避免乱码与重复编码
-    const KV_KEY = encodedKey ? decodeURIComponent(encodedKey) : '';
+    // 限制：编码后的key 最大64个字符
+    const MAX_ENCODED_LENGTH = 64;
 
-    // 1. 无标识 → 输入页
-    if (url.pathname === '/' || !encodedKey) {
+    // 无标识 / 标识超长 → 跳转到输入页
+    if (url.pathname === '/' || !encodedKey || encodedKey.length > MAX_ENCODED_LENGTH) {
       return new Response(inputHtml(), {
         headers: { "Content-Type": "text/html;charset=utf-8" }
       });
     }
 
-    // 2. 主页面 /{encodedKey}/
+    // KV存储用【解码后的原文】
+    const KV_KEY = decodeURIComponent(encodedKey);
+
+    // 主页面 /{encodedKey}/
     if (pathParts.length === 1) {
       return new Response(pageHtml(encodedKey, KV_KEY, origin), {
         headers: { "Content-Type": "text/html;charset=utf-8" }
       });
     }
 
-    // 3. 上传 /{encodedKey}/upload
+    // 上传接口
     if (pathParts[1] === "upload" && request.method === "POST") {
       try {
         const form = await request.formData();
@@ -38,7 +41,7 @@ export default {
       }
     }
 
-    // 4. 下载 /{encodedKey}/download
+    // 下载接口
     if (pathParts[1] === "download") {
       const { value, metadata } = await env.FILE_KV.getWithMetadata(KV_KEY, "arrayBuffer");
       if (!value) return resMsg("未找到文件", 404);
@@ -50,13 +53,13 @@ export default {
       });
     }
 
-    // 5. 删除 /{encodedKey}/delete
+    // 删除接口
     if (pathParts[1] === "delete") {
       await env.FILE_KV.delete(KV_KEY);
       return new Response("ok");
     }
 
-    // 6. 信息 /{encodedKey}/info
+    // 获取信息接口
     if (pathParts[1] === "info") {
       const { metadata } = await env.FILE_KV.getWithMetadata(KV_KEY);
       return new Response(JSON.stringify({
@@ -76,7 +79,7 @@ function resMsg(text, status = 200) {
   return new Response(text, { status });
 }
 
-// 输入标识页面
+// 输入标识页面（前端新增编码长度校验）
 function inputHtml() {
   return `
 <!DOCTYPE html>
@@ -116,15 +119,21 @@ input:focus {border-color:#3b82f6;}
 <body>
 <div class="card">
   <h2 class="title">创建专属文件空间</h2>
-  <p class="tip">输入自定义标识（支持中文），创建独立文件存储</p>
+  <p class="tip">输入自定义标识（支持中文），编码后最长64字符</p>
   <input type="text" id="key" placeholder="例如：我的文件、test、文档123" autocomplete="off">
   <button class="btn" onclick="go()">进入空间</button>
 </div>
 <script>
+// 前端校验：编码后长度≤64
 function go(){
   const key = document.getElementById('key').value.trim();
   if(!key) {alert('请输入标识');return;}
-  window.location.href = '/' + encodeURIComponent(key) + '/';
+  const encoded = encodeURIComponent(key);
+  if(encoded.length > 64){
+    alert('标识过长！编码后最多允许64个字符');
+    return;
+  }
+  window.location.href = '/' + encoded + '/';
 }
 </script>
 </body>
@@ -132,9 +141,8 @@ function go(){
 `;
 }
 
-// 主页面（编码彻底修复）
+// 主页面（新增返回按钮 + 保持所有功能）
 function pageHtml(encodedKey, rawKey, origin) {
-  // 核心：分享链接 = 域名 + /已编码key/ → 完全和地址栏一致
   const shareUrl = `${origin}/${encodedKey}/`;
   const basePath = `/${encodedKey}`;
 
@@ -217,6 +225,7 @@ body {
 .btn-primary {background: #3b82f6;color: #fff;}
 .btn-success {background: #10b981;color: #fff;}
 .btn-danger {background: #ef4444;color: #fff;}
+.btn-secondary {background: #6b7280;color: #fff;}
 .upload-btn {
   background: #3b82f6;
   color: #fff;
@@ -241,11 +250,13 @@ input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
 </style>
 </head>
 <body>
+<!-- 上传区域：新增【返回输入标识】按钮 -->
 <div id="uploadArea" class="card">
   <h2 class="card-title">上传文件</h2>
   <p class="tip">空间标识：${rawKey} | 单文件最大25MB</p>
   <label class="upload-btn" for="file">选择文件上传</label>
   <input type="file" id="file">
+  <button class="btn btn-secondary" onclick="backToInput()">返回输入自定义标识</button>
   <div id="status"></div>
 </div>
 
@@ -262,6 +273,11 @@ input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
 <script>
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
+
+// 返回输入标识页面
+function backToInput(){
+  window.location.href = '/';
+}
 
 function fmtSize(b){
   if(b<1024)return b+'B';
@@ -307,7 +323,6 @@ document.getElementById('file').addEventListener('change', async (e) => {
 function download(){window.location.href=basePath+'/download'}
 async function delFile(){await fetch(basePath+'/delete');loadInfo();}
 
-// 分享：复制的链接和地址栏完全一致
 async function share(){
   try {
     await navigator.clipboard.writeText(shareUrl);
