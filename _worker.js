@@ -82,38 +82,40 @@ html,body{
   background-attachment:fixed;
 }
 
-/* 固定大小卡片 */
+/* 固定大小卡片 - 放大25% */
 .box {
-  width: 420px;
-  height: 320px;
+  width: 525px;
+  height: 400px;
   background: rgba(255,255,255,0.55);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.6);
-  border-radius: 16px;
-  padding: 30px;
+  border-radius: 20px;
+  padding: 38px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   overflow: hidden;
 }
 
-/* 上传页标题正常居中 */
+/* 上传页面：内容整体居中，消除底部多余空位 */
+#uploadArea {
+  justify-content: center;
+  gap: 2px;
+}
+
 #uploadArea h3 {
-  font-size:22px;
-  margin-bottom:10px;
+  font-size: 28px;
   color:#111;
   text-align:center;
 }
 
 .tip{
   color:#dc2626;
-  font-size:14px;
+  font-size: 18px;
   text-align:center;
-  margin-bottom:20px;
 }
 
-/* 文件信息区域：标题+内容 整体布局 */
 .file-wrap {
   flex: 1;
   display: flex;
@@ -121,22 +123,20 @@ html,body{
   justify-content: center;
 }
 
-/* 当前文件文字：顶部区块垂直居中 */
 .file-wrap h3 {
-  font-size:22px;
+  font-size: 28px;
   color:#111;
   text-align:center;
-  margin: 0 0 20px 0;
+  margin: 0 0 24px 0;
 }
 
-/* 文件名框内部文字垂直水平都居中，长名自动换行 */
 .info{
   background:rgba(255,255,255,0.6);
-  padding:14px 18px;
-  border-radius:10px;
+  padding:18px 22px;
+  border-radius:12px;
   margin:0;
   text-align:center;
-  font-size:15px;
+  font-size: 19px;
   line-height:1.5;
   white-space: pre-wrap;
   word-break: break-word;
@@ -144,18 +144,17 @@ html,body{
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 80px;
+  min-height: 100px;
 }
 
 button,.upload-btn{
   width:100%;
-  padding:14px;
+  padding:18px;
   border:none;
-  border-radius:12px;
-  font-size:15px;
+  border-radius:15px;
+  font-size: 19px;
   font-weight:500;
   cursor:pointer;
-  margin:6px 0;
   background:#3b82f6;
   color:#fff;
   text-align:center;
@@ -167,11 +166,10 @@ button,.upload-btn{
 }
 
 #status{
-  margin-top:16px;
   color:#dc2626;
-  font-size:14px;
+  font-size: 18px;
   text-align:center;
-  min-height:20px;
+  min-height:24px;
 }
 
 #uploadArea, #fileArea{
