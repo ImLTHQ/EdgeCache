@@ -1,5 +1,4 @@
 const KV_KEY = "single_file_store";
-const MAX_SIZE = 26214400; // 25MB
 
 export default {
   async fetch(request, env) {
@@ -11,17 +10,23 @@ export default {
       });
     }
 
+    // 上传：不判断大小，直接尝试写入 KV，失败就报错
     if (url.pathname === "/upload" && request.method === "POST") {
-      const form = await request.formData();
-      const file = form.get("file");
-      if (!file) return resMsg("请选择文件", 400);
-      if (file.size > MAX_SIZE) return resMsg("文件超过25MB限制", 400);
+      try {
+        const form = await request.formData();
+        const file = form.get("file");
+        const buf = await file.arrayBuffer();
 
-      const buf = await file.arrayBuffer();
-      await env.FILE_KV.put(KV_KEY, buf, {
-        metadata: { name: file.name, size: file.size }
-      });
-      return new Response("ok");
+        // 直接尝试写入 KV，超过 25MB 会自动抛错
+        await env.FILE_KV.put(KV_KEY, buf, {
+          metadata: { name: file.name, size: file.size }
+        });
+
+        return new Response("ok");
+      } catch (err) {
+        // 无法写入 = 文件超过 KV 25MB 限制
+        return resMsg("文件过大，无法存储", 400);
+      }
     }
 
     if (url.pathname === "/download") {
@@ -65,7 +70,7 @@ function pageHtml() {
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale==1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EdgeCache 边缘缓存</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
@@ -103,7 +108,7 @@ input[type="file"]{
 
 <div id="uploadArea" class="box">
   <h3>上传文件</h3>
-  <p class="tip">最大25MB，仅保存1个</p>
+  <p class="tip">仅保存1个，KV 自动限制最大25MB</p>
   
   <label class="upload-btn" for="file">上传文件</label>
   <input type="file" id="file">
@@ -118,8 +123,6 @@ input[type="file"]{
 </div>
 
 <script>
-const MAX_SIZE = 26214400;
-
 function fmtSize(b){
   if(b<1024)return b+'B';
   if(b<1048576)return (b/1024).toFixed(1)+'KB';
@@ -146,26 +149,23 @@ async function loadInfo(){
   document.getElementById('fileInfo').innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
+// 完全不判断大小，直接上传
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
-
-  // 前端秒判断大小，不上传
-  if(f.size > MAX_SIZE){
-    document.getElementById('status').innerText = "文件超过25MB限制";
-    return;
-  }
-
-  document.getElementById('status').innerText = "";
 
   const fd = new FormData();
   fd.append('file', f);
   
   const res = await fetch('/upload', { method:'POST', body:fd });
+  const text = await res.text();
+
   if(!res.ok){
-    document.getElementById('status').innerText = await res.text();
+    document.getElementById('status').innerText = text;
+  }else{
+    document.getElementById('status').innerText = '';
+    loadInfo();
   }
-  loadInfo();
 });
 
 function download(){window.location.href='/download'}
