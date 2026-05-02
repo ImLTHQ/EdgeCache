@@ -2,33 +2,33 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const origin = url.origin;
-    // 解析路径中的自定义标识，支持 /xxx/ 格式
     const pathParts = url.pathname.split('/').filter(Boolean);
-    const rawKey = pathParts[0] || '';
-    // 核心：对标识进行URL编码，支持中文/特殊字符
-    const KV_KEY = rawKey ? encodeURIComponent(rawKey) : '';
 
-    // 1. 首页：无标识时显示输入页面
-    if (url.pathname === '/' || !KV_KEY) {
+    // 核心修复：从路径取出【已编码】的key，不二次编码
+    const encodedKey = pathParts[0] || '';
+    // KV存储用【解码后的原文】，避免乱码与重复编码
+    const KV_KEY = encodedKey ? decodeURIComponent(encodedKey) : '';
+
+    // 1. 无标识 → 输入页
+    if (url.pathname === '/' || !encodedKey) {
       return new Response(inputHtml(), {
         headers: { "Content-Type": "text/html;charset=utf-8" }
       });
     }
 
-    // 2. 主页面：携带标识访问
+    // 2. 主页面 /{encodedKey}/
     if (pathParts.length === 1) {
-      return new Response(pageHtml(KV_KEY, origin, rawKey), {
+      return new Response(pageHtml(encodedKey, KV_KEY, origin), {
         headers: { "Content-Type": "text/html;charset=utf-8" }
       });
     }
 
-    // 3. 上传文件 API
+    // 3. 上传 /{encodedKey}/upload
     if (pathParts[1] === "upload" && request.method === "POST") {
       try {
         const form = await request.formData();
         const file = form.get("file");
         const buf = await file.arrayBuffer();
-
         await env.FILE_KV.put(KV_KEY, buf, {
           metadata: { name: file.name, size: file.size }
         });
@@ -38,7 +38,7 @@ export default {
       }
     }
 
-    // 4. 下载文件 API
+    // 4. 下载 /{encodedKey}/download
     if (pathParts[1] === "download") {
       const { value, metadata } = await env.FILE_KV.getWithMetadata(KV_KEY, "arrayBuffer");
       if (!value) return resMsg("未找到文件", 404);
@@ -50,13 +50,13 @@ export default {
       });
     }
 
-    // 5. 删除文件 API
+    // 5. 删除 /{encodedKey}/delete
     if (pathParts[1] === "delete") {
       await env.FILE_KV.delete(KV_KEY);
       return new Response("ok");
     }
 
-    // 6. 获取文件信息 API
+    // 6. 信息 /{encodedKey}/info
     if (pathParts[1] === "info") {
       const { metadata } = await env.FILE_KV.getWithMetadata(KV_KEY);
       return new Response(JSON.stringify({
@@ -76,7 +76,7 @@ function resMsg(text, status = 200) {
   return new Response(text, { status });
 }
 
-// 根路径：输入自定义标识页面
+// 输入标识页面
 function inputHtml() {
   return `
 <!DOCTYPE html>
@@ -124,7 +124,6 @@ input:focus {border-color:#3b82f6;}
 function go(){
   const key = document.getElementById('key').value.trim();
   if(!key) {alert('请输入标识');return;}
-  // 自动跳转到 域名/标识/
   window.location.href = '/' + encodeURIComponent(key) + '/';
 }
 </script>
@@ -133,10 +132,12 @@ function go(){
 `;
 }
 
-// 文件操作主页面（动态绑定标识）
-function pageHtml(KV_KEY, origin, rawKey) {
-  const basePath = `/${encodeURIComponent(rawKey)}`;
-  const shareUrl = `${origin}${basePath}/`;
+// 主页面（编码彻底修复）
+function pageHtml(encodedKey, rawKey, origin) {
+  // 核心：分享链接 = 域名 + /已编码key/ → 完全和地址栏一致
+  const shareUrl = `${origin}/${encodedKey}/`;
+  const basePath = `/${encodedKey}`;
+
   return `
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -306,7 +307,7 @@ document.getElementById('file').addEventListener('change', async (e) => {
 function download(){window.location.href=basePath+'/download'}
 async function delFile(){await fetch(basePath+'/delete');loadInfo();}
 
-// 分享功能：复制当前链接
+// 分享：复制的链接和地址栏完全一致
 async function share(){
   try {
     await navigator.clipboard.writeText(shareUrl);
