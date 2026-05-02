@@ -112,6 +112,12 @@ html,body{
   gap:8px;
 }
 
+/* ========== 关键修复：文件页布局改为从顶部开始 ========== */
+#fileArea.box {
+  justify-content: flex-start;
+  padding-top: 40px; /* 让标题从顶部往下40px开始 */
+}
+
 h3{
   font-size:22px;
   color:#111;
@@ -124,11 +130,16 @@ h3{
   text-align:center;
 }
 
+/* 文件页标题单独调整，完美居中 */
+#fileArea h3 {
+  margin: 0 0 24px 0;
+}
+
 .info{
   background:rgba(255,255,255,0.6);
   padding:14px 18px;
   border-radius:10px;
-  margin:14px 0;
+  margin:0 0 20px 0;
   text-align:center;
   font-size:15px;
   line-height:1.5;
@@ -162,12 +173,6 @@ button,.upload-btn{
   text-align:center;
   min-height:20px;
 }
-
-/* ========== 只改这里：当前文件标题位置 ========== */
-#fileArea h3 {
-  margin-bottom: 28px; /* 让标题往下移，正好在中间位置 */
-}
-/* ============================================== */
 
 #uploadArea, #fileArea{
   display:none;
