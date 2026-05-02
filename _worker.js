@@ -153,6 +153,17 @@ function pageHtml(encodedKey, rawKey, origin) {
   const shareUrl = `${origin}/${encodedKey}/`;
   const basePath = `/${encodedKey}`;
 
+  // ====================== 核心修改：判断换行，控制空间标识显示 ======================
+  let tipContent;
+  if (wrappedKey.includes('\n')) {
+    // 标识有换行 → 空间标识独立一行
+    tipContent = `空间标识:\n${wrappedKey}\n单文件最大25MB`;
+  } else {
+    // 标识无换行 → 空间标识与标识同行
+    tipContent = `空间标识: ${wrappedKey}\n单文件最大25MB`;
+  }
+  // ==============================================================================
+
   return `
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -294,9 +305,7 @@ input[type="range"]::-webkit-slider-thumb {
 <body>
 <div id="uploadArea" class="card">
   <h2 class="card-title">上传文件</h2>
-  <!-- 分行显示，且标识自动换行 -->
-  <p class="tip">空间标识: ${wrappedKey}
-单文件最大25MB</p>
+  <p class="tip">${tipContent}</p>
   
   <div class="slider-container">
     <div class="slider-label">文件有效期：<span id="ttlText">30分钟</span></div>
@@ -397,7 +406,7 @@ function updateExpiryDisplay(expiration) {
   
   const ttlText = fmtTime(remaining);
   const expiryDate = formatDate(expiration);
-  // 核心修改：换行分隔两行显示
+  // LLM经常乱改下面第二行
   document.getElementById('fileExpiryInfo').innerText = 
     \`剩余有效期：\${ttlText}\\n过期时间：\${expiryDate}\`;
 }
