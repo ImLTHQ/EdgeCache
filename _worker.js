@@ -57,7 +57,7 @@ export default {
   }
 };
 
-function resMsg(text, status = 20) {
+function resMsg(text, status = 200) {
   return new Response(text, { status });
 }
 
@@ -82,28 +82,21 @@ html,body{
   background-attachment:fixed;
 }
 
-.container {
-  width:100%;
-  max-width:33vw;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
+/* 固定大小卡片，永远不变 */
 .box {
-  background:rgba(255,255,255,0.55);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,0.6);
-  border-radius:16px;
-  padding:28px 32px;
-  width:100%;
-  height:33vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  box-shadow:0 8px 32px rgba(0,0,0,0.1);
-  overflow:hidden;
+  width: 420px;
+  height: 320px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 16px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  overflow: hidden;
 }
 
 h3{
@@ -120,6 +113,7 @@ h3{
   margin-bottom:20px;
 }
 
+/* 只有文件名过长自动换行 */
 .info{
   background:rgba(255,255,255,0.6);
   padding:14px 18px;
@@ -128,8 +122,9 @@ h3{
   text-align:center;
   font-size:15px;
   line-height:1.5;
-  white-space:pre-wrap;
-  word-break:break-word;
+  white-space: pre-wrap;
+  word-break: break-word;
+  width: 100%;
 }
 
 button,.upload-btn{
@@ -170,21 +165,19 @@ input[type="file"]{
 </head>
 <body>
 
-<div class="container">
-  <div id="uploadArea" class="box">
-    <h3>上传文件</h3>
-    <p class="tip">仅保存1个 · KV 单文件限制 25MB</p>
-    <label class="upload-btn" for="file">上传文件</label>
-    <input type="file" id="file">
-    <div id="status"></div>
-  </div>
+<div id="uploadArea" class="box">
+  <h3>上传文件</h3>
+  <p class="tip">仅保存1个 · KV 单文件限制 25MB</p>
+  <label class="upload-btn" for="file">上传文件</label>
+  <input type="file" id="file">
+  <div id="status"></div>
+</div>
 
-  <div id="fileArea" class="box">
-    <h3>当前文件</h3>
-    <div class="info" id="fileInfo"></div>
-    <button class="btn-blue" onclick="download()">下载</button>
-    <button class="btn-red" onclick="delFile()">删除</button>
-  </div>
+<div id="fileArea" class="box">
+  <h3>当前文件</h3>
+  <div class="info" id="fileInfo"></div>
+  <button class="btn-blue" onclick="download()">下载</button>
+  <button class="btn-red" onclick="delFile()">删除</button>
 </div>
 
 <script>
