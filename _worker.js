@@ -6,7 +6,7 @@ export default {
 
     // 取出路径中【已编码】的key
     const encodedKey = pathParts[0] || '';
-    // 限制：编码后的key 最大64个字符
+    // 限制: 编码后的key 最大64个字符
     const MAX_ENCODED_LENGTH = 64;
 
     // 无标识 / 标识超长 → 跳转到输入页
@@ -124,7 +124,7 @@ input:focus {border-color:#3b82f6;}
   <button class="btn" onclick="go()">下一步</button>
 </div>
 <script>
-// 前端校验：编码后长度≤64
+// 前端校验: 编码后长度≤64
 function go(){
   const key = document.getElementById('key').value.trim();
   if(!key) {alert('请输入标识');return;}
@@ -250,10 +250,10 @@ input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
 </style>
 </head>
 <body>
-<!-- 上传区域：新增【返回输入标识】按钮 -->
+<!-- 上传区域: 新增【返回输入标识】按钮 -->
 <div id="uploadArea" class="card">
   <h2 class="card-title">上传文件</h2>
-  <p class="tip">空间标识：${rawKey} | 单文件最大25MB</p>
+  <p class="tip">空间标识: ${rawKey} | 单文件最大25MB</p>
   <label class="upload-btn" for="file">选择文件上传</label>
   <input type="file" id="file">
   <button class="btn btn-secondary" onclick="backToInput()">上一步</button>
@@ -301,7 +301,7 @@ async function loadInfo(){
   }
   uploadArea.style.display = 'none';
   fileArea.style.display = 'flex';
-  document.getElementById('fileInfo').innerText = d.name+'\\n大小：'+fmtSize(d.size);
+  document.getElementById('fileInfo').innerText = d.name+'\\n大小: '+fmtSize(d.size);
 }
 
 document.getElementById('file').addEventListener('change', async (e) => {
@@ -326,9 +326,9 @@ async function delFile(){await fetch(basePath+'/delete');loadInfo();}
 async function share(){
   try {
     await navigator.clipboard.writeText(shareUrl);
-    alert('链接复制成功！');
+    alert('链接复制成功!');
   } catch (e) {
-    alert('复制失败, 请手动复制：'+shareUrl);
+    alert('复制失败, 请手动复制: '+shareUrl);
   }
 }
 
