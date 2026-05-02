@@ -25,8 +25,7 @@ export default {
       try {
         const form = await request.formData();
         const file = form.get("file");
-        // 默认 30 分钟
-        const ttl = parseInt(form.get('ttl')) || 1800;
+        const ttl = parseInt(form.get('ttl')) || 60;
         const buf = await file.arrayBuffer();
         const expiration = Math.floor(Date.now()/1000) + ttl;
         
@@ -106,7 +105,7 @@ body {
 .title {font-size:24px;color:#111;text-align:center;font-weight:600;}
 .tip {color:#666;font-size:14px;text-align:center;}
 input {
-  padding:16;border-radius:14px;border:1px solid #ddd;
+  padding:16px;border-radius:14px;border:1px solid #ddd;
   font-size:16px;outline:none;transition:0.2s;
 }
 input:focus {border-color:#3b82f6;}
@@ -288,9 +287,8 @@ input[type="range"]::-webkit-slider-thumb {
   <p class="tip">空间标识: ${rawKey} | 单文件最大25MB</p>
   
   <div class="slider-container">
-    <div class="slider-label">文件有效期：<span id="ttlText">30分钟</span></div>
-    <!-- 滑动条默认选中30分钟 -->
-    <input type="range" id="ttlSlider" min="0" max="5" value="1" step="1">
+    <div class="slider-label">文件有效期：<span id="ttlText">1分钟(测试)</span></div>
+    <input type="range" id="ttlSlider" min="0" max="5" value="0" step="1">
   </div>
 
   <label class="upload-btn" for="file">选择文件上传</label>
@@ -316,8 +314,9 @@ input[type="range"]::-webkit-slider-thumb {
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
 
+// 新增1分钟测试选项，共6个档位
 const ttlOptions = [
-  { text: '5分钟', value: 300 },
+  { text: '1分钟(测试)', value: 60 },
   { text: '30分钟', value: 1800 },
   { text: '1小时', value: 3600 },
   { text: '6小时', value: 21600 },
@@ -327,7 +326,7 @@ const ttlOptions = [
 
 const slider = document.getElementById('ttlSlider');
 const ttlText = document.getElementById('ttlText');
-let currentTtl = ttlOptions[1].value;
+let currentTtl = ttlOptions[0].value;
 let expiryInterval;
 
 slider.addEventListener('input', () => {
@@ -373,7 +372,7 @@ function formatDate(timestamp) {
   });
 }
 
-// 分两行显示：剩余有效期 + 过期时间
+// 分两行显示：有效期剩余 + 过期时间
 function updateExpiryDisplay(expiration) {
   const now = Math.floor(Date.now()/1000);
   const remaining = expiration - now;
@@ -386,6 +385,7 @@ function updateExpiryDisplay(expiration) {
   
   const ttlText = fmtTime(remaining);
   const expiryDate = formatDate(expiration);
+  // 核心修改：换行分隔两行显示
   document.getElementById('fileExpiryInfo').innerText = 
     \`剩余有效期：\${ttlText}\\n过期时间：\${expiryDate}\`;
 }
