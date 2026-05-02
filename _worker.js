@@ -112,10 +112,10 @@ html,body{
   gap:8px;
 }
 
-/* ========== 关键修复：调整文件页内边距和间距 ========== */
+/* 文件页布局 */
 #fileArea.box {
   justify-content: flex-start;
-  padding: 30px 32px 24px; /* 调整上下内边距，避免底部被截断 */
+  padding: 30px 32px 0; /* 去掉底部内边距，改用按钮下边距控制 */
 }
 
 h3{
@@ -131,14 +131,14 @@ h3{
 }
 
 #fileArea h3 {
-  margin: 0 0 20px 0; /* 减少标题下方间距 */
+  margin: 0 0 20px 0;
 }
 
 .info{
   background:rgba(255,255,255,0.6);
   padding:14px 18px;
   border-radius:10px;
-  margin:0 0 16px 0; /* 减少文件名框下方间距 */
+  margin:0 0 16px 0;
   text-align:center;
   font-size:15px;
   line-height:1.5;
@@ -154,7 +154,7 @@ button,.upload-btn{
   font-size:15px;
   font-weight:500;
   cursor:pointer;
-  margin:4px 0; /* 减少按钮上下间距 */
+  margin:4px 0;
   background:#3b82f6;
   color:#fff;
   text-align:center;
@@ -163,6 +163,7 @@ button,.upload-btn{
 
 .btn-red{
   background:#ef4444;
+  margin-bottom: 24px; /* 关键：给删除按钮加固定底部留白 */
 }
 
 #status{
