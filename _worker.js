@@ -78,78 +78,80 @@ html,body{
   display:flex;
   align-items:center;
   justify-content:center;
-  padding: 5%;
+  padding:20px;
   background: linear-gradient(135deg, rgb(255, 100, 180) 0%, rgb(200, 150, 255) 50%, rgb(0, 255, 255) 100%);
   background-attachment:fixed;
 }
 
-/* 动态占比：最大宽度 90% 窗口，高度自适应 */
 .container{
   width:100%;
-  max-width:90vw;
-  height:80vh;
-  max-height:90vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  /* 黄金适中占比：桌面不大不小 */
+  max-width:55vw;
+  max-height:65vh;
 }
 
-/* 毛玻璃半透明卡片 - 全屏大比例 */
 .box{
   background:rgba(255,255,255,0.55);
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
-  border-radius:24px;
-  padding:8% 10%;
+  border-radius:1rem;
+  padding:2.5rem;
   width:100%;
   height:100%;
-  min-height:320px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  border:1px solid rgba(255,255,255,0.7);
-  box-shadow:0 8px 40px rgba(0,0,0,0.1);
+  border:1px solid rgba(255,255,255,0.6);
+  box-shadow:0 8px 32px rgba(0,0,0,0.1);
+}
+
+/* 小屏手机自动适配 */
+@media (max-width:768px){
+  .container{
+    max-width:90vw;
+    max-height:auto;
+  }
+  .box{
+    padding:2rem 1.5rem;
+  }
 }
 
 h3{
-  font-size:clamp(22px,6vw,36px);
-  margin-bottom:20px;
+  font-size:clamp(20px,3vw,26px);
+  margin-bottom:12px;
   color:#111;
   text-align:center;
 }
 
 .tip{
   color:#dc2626;
-  font-size:clamp(14px,3vw,18px);
+  font-size:clamp(13px,2vw,15px);
   text-align:center;
-  margin-bottom:30px;
+  margin-bottom:20px;
 }
 
 .info{
   background:rgba(255,255,255,0.6);
-  padding:24px;
-  border-radius:16px;
-  margin:20px 0;
+  padding:16px;
+  border-radius:12px;
+  margin:18px 0;
   text-align:center;
-  font-size:clamp(16px,4vw,22px);
+  font-size:clamp(14px,2.5vw,17px);
   line-height:1.6;
+  color:#222;
 }
 
-/* 按钮动态大小 */
 button,.upload-btn{
   width:100%;
-  padding:20px;
+  padding:15px;
   border:none;
-  border-radius:16px;
-  font-size:clamp(16px,4vw,22px);
+  border-radius:12px;
+  font-size:clamp(15px,2.5vw,17px);
   font-weight:500;
   cursor:pointer;
-  margin:10px 0;
+  margin:8px 0;
+  transition:0.2s;
   background:#3b82f6;
   color:#fff;
   text-align:center;
   display:block;
-  transition:0.2s;
 }
 
 .btn-red{
@@ -157,11 +159,11 @@ button,.upload-btn{
 }
 
 #status{
-  margin-top:24px;
+  margin-top:18px;
   color:#dc2626;
-  font-size:clamp(15px,3.5vw,18px);
+  font-size:clamp(14px,2.5vw,16px);
   text-align:center;
-  min-height:24px;
+  min-height:20px;
 }
 
 #uploadArea, #fileArea{
@@ -212,14 +214,14 @@ async function loadInfo(){
   const status = document.getElementById('status');
 
   if(!d.exist){
-    uploadArea.style.display = 'flex';
+    uploadArea.style.display = 'block';
     fileArea.style.display = 'none';
     status.innerText = '';
     return;
   }
 
   uploadArea.style.display = 'none';
-  fileArea.style.display = 'flex';
+  fileArea.style.display = 'block';
   document.getElementById('fileInfo').innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
