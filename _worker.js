@@ -83,13 +83,13 @@ html,body{
 }
 
 .container {
-  width:100%;
-  max-width:33vw;
+  width:auto;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
+/* 默认卡片：给当前文件页用 固定尺寸 */
 .box {
   background:rgba(255,255,255,0.55);
   backdrop-filter:blur(12px);
@@ -97,8 +97,8 @@ html,body{
   border:1px solid rgba(255,255,255,0.6);
   border-radius:16px;
   padding:28px 32px;
-  width:100%;
-  height:33vh;
+  width:420px;
+  height:320px;
   display:flex;
   flex-direction:column;
   justify-content:center;
@@ -106,12 +106,13 @@ html,body{
   overflow:hidden;
 }
 
-/* ========== 只修改这里：上传页面卡片 ========== */
-#uploadArea {
-  height: 28vh !important;   /* 卡片高度变小 */
-  gap: 12px;                 /* 内部元素间距缩小 */
+/* 上传页面 单独固定宽高，完全写死，不用自适应 */
+#uploadArea.box{
+  width:420px;
+  height:260px;
+  padding:20px 28px;
+  gap:8px;
 }
-/* ============================================== */
 
 h3{
   font-size:22px;
