@@ -1,16 +1,29 @@
-const KV_KEY = "single_file_store";
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const origin = url.origin;
+    // 解析路径中的自定义标识，支持 /xxx/ 格式
+    const pathParts = url.pathname.split('/').filter(Boolean);
+    const rawKey = pathParts[0] || '';
+    // 核心：对标识进行URL编码，支持中文/特殊字符
+    const KV_KEY = rawKey ? encodeURIComponent(rawKey) : '';
 
-    if (url.pathname === "/") {
-      return new Response(pageHtml(), {
+    // 1. 首页：无标识时显示输入页面
+    if (url.pathname === '/' || !KV_KEY) {
+      return new Response(inputHtml(), {
         headers: { "Content-Type": "text/html;charset=utf-8" }
       });
     }
 
-    if (url.pathname === "/upload" && request.method === "POST") {
+    // 2. 主页面：携带标识访问
+    if (pathParts.length === 1) {
+      return new Response(pageHtml(KV_KEY, origin, rawKey), {
+        headers: { "Content-Type": "text/html;charset=utf-8" }
+      });
+    }
+
+    // 3. 上传文件 API
+    if (pathParts[1] === "upload" && request.method === "POST") {
       try {
         const form = await request.formData();
         const file = form.get("file");
@@ -19,16 +32,16 @@ export default {
         await env.FILE_KV.put(KV_KEY, buf, {
           metadata: { name: file.name, size: file.size }
         });
-
         return new Response("ok");
       } catch (err) {
-        return resMsg("上传失败, 可能文件过大", 400);
+        return resMsg("上传失败，文件可能超过25MB", 400);
       }
     }
 
-    if (url.pathname === "/download") {
+    // 4. 下载文件 API
+    if (pathParts[1] === "download") {
       const { value, metadata } = await env.FILE_KV.getWithMetadata(KV_KEY, "arrayBuffer");
-      if (!value) return resMsg("未上传文件", 404);
+      if (!value) return resMsg("未找到文件", 404);
       return new Response(value, {
         headers: {
           "Content-Type": "application/octet-stream",
@@ -37,12 +50,14 @@ export default {
       });
     }
 
-    if (url.pathname === "/delete") {
+    // 5. 删除文件 API
+    if (pathParts[1] === "delete") {
       await env.FILE_KV.delete(KV_KEY);
       return new Response("ok");
     }
 
-    if (url.pathname === "/info") {
+    // 6. 获取文件信息 API
+    if (pathParts[1] === "info") {
       const { metadata } = await env.FILE_KV.getWithMetadata(KV_KEY);
       return new Response(JSON.stringify({
         exist: !!metadata,
@@ -53,7 +68,7 @@ export default {
       });
     }
 
-    return resMsg("404");
+    return resMsg("404", 404);
   }
 };
 
@@ -61,14 +76,74 @@ function resMsg(text, status = 200) {
   return new Response(text, { status });
 }
 
-function pageHtml() {
+// 根路径：输入自定义标识页面
+function inputHtml() {
   return `
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EdgeCache</title>
+<title>创建文件空间</title>
+<style>
+* {margin:0;padding:0;box-sizing:border-box;font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;}
+body {
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background: linear-gradient(135deg, rgb(255, 100, 180) 0%, rgb(200, 150, 255) 50%, rgb(0, 255, 255) 100%);
+  padding:20px;
+}
+.card {
+  background:rgba(255,255,255,0.55);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.6);border-radius:20px;
+  padding:32px;width:100%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.1);
+  display:flex;flex-direction:column;gap:20px;
+}
+.title {font-size:24px;color:#111;text-align:center;font-weight:600;}
+.tip {color:#666;font-size:14px;text-align:center;}
+input {
+  padding:16px;border-radius:14px;border:1px solid #ddd;
+  font-size:16px;outline:none;transition:0.2s;
+}
+input:focus {border-color:#3b82f6;}
+.btn {
+  padding:16px;border:none;border-radius:14px;background:#3b82f6;
+  color:#fff;font-size:16px;font-weight:500;cursor:pointer;
+  transition:0.2s;
+}
+.btn:hover {transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2 class="title">创建专属文件空间</h2>
+  <p class="tip">输入自定义标识（支持中文），创建独立文件存储</p>
+  <input type="text" id="key" placeholder="例如：我的文件、test、文档123" autocomplete="off">
+  <button class="btn" onclick="go()">进入空间</button>
+</div>
+<script>
+function go(){
+  const key = document.getElementById('key').value.trim();
+  if(!key) {alert('请输入标识');return;}
+  // 自动跳转到 域名/标识/
+  window.location.href = '/' + encodeURIComponent(key) + '/';
+}
+</script>
+</body>
+</html>
+`;
+}
+
+// 文件操作主页面（动态绑定标识）
+function pageHtml(KV_KEY, origin, rawKey) {
+  const basePath = `/${encodeURIComponent(rawKey)}`;
+  const shareUrl = `${origin}${basePath}/`;
+  return `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EdgeCache - ${rawKey}</title>
 <style>
 * {
   margin: 0;
@@ -76,18 +151,14 @@ function pageHtml() {
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
-
 body {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 保留你要求的渐变背景 */
   background: linear-gradient(135deg, rgb(255, 100, 180) 0%, rgb(200, 150, 255) 50%, rgb(0, 255, 255) 100%);
   padding: 20px;
 }
-
-/* 核心卡片：响应式，无固定宽高 */
 .card {
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(12px);
@@ -101,23 +172,17 @@ body {
   flex-direction: column;
   gap: 20px;
 }
-
-/* 标题样式 */
 .card-title {
   font-size: 24px;
   color: #111;
   text-align: center;
   font-weight: 600;
 }
-
-/* 提示文字 */
 .tip {
   color: #dc2626;
   font-size: 14px;
   text-align: center;
 }
-
-/* 文件信息盒子：支持长文本换行 */
 .file-info {
   background: rgba(255, 255, 255, 0.7);
   padding: 18px;
@@ -132,16 +197,12 @@ body {
   align-items: center;
   justify-content: center;
 }
-
-/* 按钮容器：弹性布局，自动间距 */
 .btn-group {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: auto; /* 自动推到下方，永远留间距 */
+  margin-top: auto;
 }
-
-/* 按钮样式 */
 .btn {
   padding: 16px;
   border: none;
@@ -152,18 +213,9 @@ body {
   text-align: center;
   transition: 0.2s;
 }
-
-.btn-primary {
-  background: #3b82f6;
-  color: #fff;
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: #fff;
-}
-
-/* 上传按钮 */
+.btn-primary {background: #3b82f6;color: #fff;}
+.btn-success {background: #10b981;color: #fff;}
+.btn-danger {background: #ef4444;color: #fff;}
 .upload-btn {
   background: #3b82f6;
   color: #fff;
@@ -173,29 +225,14 @@ body {
   text-align: center;
   font-size: 16px;
 }
-
-/* 状态提示 */
 #status {
   color: #dc2626;
   font-size: 14px;
   text-align: center;
   min-height: 20px;
 }
-
-/* 隐藏元素 */
-#uploadArea, #fileArea {
-  display: none;
-}
-
-/* 隐藏原生文件选择框 */
-input[type="file"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-/* hover 动效 */
+#uploadArea, #fileArea {display: none;}
+input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
 .btn:hover, .upload-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -203,37 +240,36 @@ input[type="file"] {
 </style>
 </head>
 <body>
-
-<!-- 上传区域 -->
 <div id="uploadArea" class="card">
   <h2 class="card-title">上传文件</h2>
-  <p class="tip">仅保存1个 · KV 单文件限制 25MB</p>
+  <p class="tip">空间标识：${rawKey} | 单文件最大25MB</p>
   <label class="upload-btn" for="file">选择文件上传</label>
   <input type="file" id="file">
   <div id="status"></div>
 </div>
 
-<!-- 文件展示区域 -->
 <div id="fileArea" class="card">
   <h2 class="card-title">当前文件</h2>
   <div class="file-info" id="fileInfo"></div>
   <div class="btn-group">
     <button class="btn btn-primary" onclick="download()">下载文件</button>
+    <button class="btn btn-success" onclick="share()">分享链接</button>
     <button class="btn btn-danger" onclick="delFile()">删除文件</button>
   </div>
 </div>
 
 <script>
-// 文件大小格式化
+const basePath = "${basePath}";
+const shareUrl = "${shareUrl}";
+
 function fmtSize(b){
   if(b<1024)return b+'B';
   if(b<1048576)return (b/1024).toFixed(1)+'KB';
   return (b/1048576).toFixed(2)+'MB';
 }
 
-// 加载文件信息
 async function loadInfo(){
-  const res=await fetch('/info');
+  const res=await fetch(basePath+'/info');
   const d=await res.json();
   
   const uploadArea = document.getElementById('uploadArea');
@@ -246,23 +282,19 @@ async function loadInfo(){
     status.innerText = '';
     return;
   }
-
   uploadArea.style.display = 'none';
   fileArea.style.display = 'flex';
   document.getElementById('fileInfo').innerText = d.name+'\\n大小：'+fmtSize(d.size);
 }
 
-// 上传文件
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
-
   const fd = new FormData();
   fd.append('file', f);
   
-  const res = await fetch('/upload', { method:'POST', body:fd });
+  const res = await fetch(basePath+'/upload', { method:'POST', body:fd });
   const text = await res.text();
-
   if(!res.ok){
     document.getElementById('status').innerText = text;
   }else{
@@ -271,13 +303,17 @@ document.getElementById('file').addEventListener('change', async (e) => {
   }
 });
 
-// 下载文件
-function download(){window.location.href='/download'}
+function download(){window.location.href=basePath+'/download'}
+async function delFile(){await fetch(basePath+'/delete');loadInfo();}
 
-// 删除文件
-async function delFile(){
-  await fetch('/delete');
-  loadInfo();
+// 分享功能：复制当前链接
+async function share(){
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+    alert('链接复制成功！');
+  } catch (e) {
+    alert('复制失败，请手动复制：'+shareUrl);
+  }
 }
 
 window.onload=loadInfo;
