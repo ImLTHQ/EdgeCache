@@ -89,7 +89,6 @@ html,body{
   justify-content:center;
 }
 
-/* 默认卡片：给当前文件页用 固定尺寸 */
 .box {
   background:rgba(255,255,255,0.55);
   backdrop-filter:blur(12px);
@@ -106,7 +105,6 @@ html,body{
   overflow:hidden;
 }
 
-/* 上传页面 单独固定宽高，完全写死，不用自适应 */
 #uploadArea.box{
   width:420px;
   height:260px;
@@ -116,7 +114,6 @@ html,body{
 
 h3{
   font-size:22px;
-  margin-bottom:10px;
   color:#111;
   text-align:center;
 }
@@ -125,7 +122,6 @@ h3{
   color:#dc2626;
   font-size:14px;
   text-align:center;
-  margin-bottom:20px;
 }
 
 .info{
@@ -166,6 +162,12 @@ button,.upload-btn{
   text-align:center;
   min-height:20px;
 }
+
+/* ========== 只改这里：当前文件标题位置 ========== */
+#fileArea h3 {
+  margin-bottom: 28px; /* 让标题往下移，正好在中间位置 */
+}
+/* ============================================== */
 
 #uploadArea, #fileArea{
   display:none;
