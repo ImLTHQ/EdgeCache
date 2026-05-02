@@ -77,17 +77,26 @@ button{padding:9px 18px;border:none;border-radius:8px;cursor:pointer;margin:6px 
 .btn-red{background:#ef4444;color:#fff}
 #status{margin-top:12px;color:#16a34a}
 #uploadArea, #fileArea{display:none}
-/* 自定义文件选择框文字 */
+
+/* 修复：只点按钮才能选文件，不点空白触发 */
 input[type="file"]{
-  color: transparent;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
 }
-input[type="file"]::file-selector-button{
-  padding:8px 16px;
-  border:none;
-  border-radius:8px;
+
+/* 上传按钮样式 */
+.upload-btn{
+  display: inline-block;
+  padding:9px 18px;
   background:#3b82f6;
   color:#fff;
+  border-radius:8px;
   cursor:pointer;
+  margin:6px 0;
 }
 </style>
 </head>
@@ -95,8 +104,10 @@ input[type="file"]::file-selector-button{
 
 <div id="uploadArea" class="box">
   <h3>上传文件</h3>
-  <p class="tip">最大25MB，仅保存1个，选择即自动上传</p>
-  <input type="file" id="file" title="上传文件">
+  <p class="tip">最大25MB，仅保存1个</p>
+  
+  <label class="upload-btn" for="file">上传文件</label>
+  <input type="file" id="file">
   <div id="status"></div>
 </div>
 
@@ -133,6 +144,7 @@ async function loadInfo(){
   fileInfo.innerText = '文件名：'+d.name+'\\n大小：'+fmtSize(d.size);
 }
 
+// 选择文件自动上传
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
@@ -148,10 +160,11 @@ document.getElementById('file').addEventListener('change', async (e) => {
 });
 
 function download(){window.location.href='/download'}
+
 async function delFile(){
   if(!confirm('确定删除？'))return;
   await fetch('/delete');
-  status('已删除','green');
+  // 不显示提示，直接刷新
   loadInfo();
 }
 
