@@ -40,7 +40,7 @@ export default {
         });
         return new Response("ok");
       } catch (err) {
-        return resMsg("上传失败, 文件可能超过25MB", 400);
+        return resMsg("上传失败", 400);
       }
     }
 
@@ -262,7 +262,6 @@ body {
   text-align: center;
   min-height: 20px;
 }
-/* 新增进度条样式 */
 #progress {
   text-align: center;
   font-size: 14px;
@@ -317,7 +316,6 @@ input[type="range"]::-webkit-slider-thumb {
 
   <label class="upload-btn" for="file">选择文件上传</label>
   <input type="file" id="file">
-  <!-- 新增进度显示区域 -->
   <div id="progress"></div>
   <button class="btn btn-secondary" onclick="backToInput()">上一步</button>
   <div id="status"></div>
@@ -339,6 +337,7 @@ input[type="range"]::-webkit-slider-thumb {
 <script>
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
 const ttlOptions = [
   { text: '5分钟', value: 300 },
@@ -371,7 +370,6 @@ function fmtSize(b){
   return (b/1048576).toFixed(2)+'MB';
 }
 
-// 新增：格式化上传速度
 function formatSpeed(bytesPerSecond) {
   if (bytesPerSecond < 1024) return bytesPerSecond.toFixed(1) + ' B/s';
   if (bytesPerSecond < 1048576) return (bytesPerSecond / 1024).toFixed(1) + ' KB/s';
@@ -417,7 +415,6 @@ function updateExpiryDisplay(expiration) {
   
   const ttlText = fmtTime(remaining);
   const expiryDate = formatDate(expiration);
-  // LLM经常乱改下面第二行
   document.getElementById('fileExpiryInfo').innerText = 
     \`剩余有效期：\${ttlText}\\n过期时间：\${expiryDate}\`;
 }
@@ -434,8 +431,7 @@ async function loadInfo(){
     uploadArea.style.display = 'flex';
     fileArea.style.display = 'none';
     status.innerText = '';
-    progressEl.innerText = ''; // 清空进度
-    progressEl.style.color = '#2563eb'; // 重置颜色
+    progressEl.innerText = '';
     clearInterval(expiryInterval);
     return;
   }
@@ -455,27 +451,28 @@ async function loadInfo(){
   }
 }
 
-// 核心：带进度的文件上传（XHR实现）
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
+
+  if (f.size > MAX_FILE_SIZE) {
+    alert(\`文件超出25MB限制\`);
+    e.target.value = '';
+    progressEl.innerText = '';
+    return;
+  }
   
   const fd = new FormData();
   fd.append('file', f);
   fd.append('ttl', currentTtl);
   
-  // 清空状态
   document.getElementById('status').innerText = '';
   progressEl.innerText = '准备上传...';
-  progressEl.style.color = '#2563eb'; // 默认蓝色
   
-  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB阈值
-  let lastSpeed = '0 B/s'; // 持久化速度，不清零
-  
+  let lastSpeed = '0 B/s';
   const xhr = new XMLHttpRequest();
   xhr.open('POST', basePath+'/upload');
   
-  // 上传进度监听
   let lastLoaded = 0;
   let lastTime = Date.now();
   
@@ -483,10 +480,8 @@ document.getElementById('file').addEventListener('change', async (e) => {
     if (event.lengthComputable) {
       const total = event.total;
       const loaded = event.loaded;
-      // 精确到0.1%的百分比
       const percent = (loaded / total * 100).toFixed(1);
       
-      // 1秒计算一次上传速度，未到1秒则保留上一次速度
       const now = Date.now();
       const duration = (now - lastTime) / 1000;
       
@@ -498,32 +493,22 @@ document.getElementById('file').addEventListener('change', async (e) => {
       }
       const speed = lastSpeed;
       
-      // 超过25MB自动变红，否则蓝色
-      if (total > MAX_FILE_SIZE) {
-        progressEl.style.color = '#dc2626';
-      } else {
-        progressEl.style.color = '#2563eb';
-      }
-      
-      // 渲染进度信息
       progressEl.innerText = 
         \`上传进度：\${percent}%\\n已上传：\${fmtSize(loaded)}/\${fmtSize(total)}\\n上传速度：\${speed}\`;
     }
   };
   
-  // 上传完成
+  // 上传完成直接刷新界面，无提示无延迟
   xhr.onload = () => {
     if (xhr.status === 200) {
-      progressEl.innerText = '上传完成！';
-      setTimeout(() => loadInfo(), 800); // 延迟刷新页面
+      loadInfo();
     } else {
-      document.getElementById('status').innerText = '上传失败，文件可能超过25MB';
+      document.getElementById('status').innerText = '失败';
     }
   };
   
-  // 上传失败
   xhr.onerror = () => {
-    document.getElementById('status').innerText = '上传失败，网络异常';
+    document.getElementById('status').innerText = '网络异常';
   };
   
   xhr.send(fd);
