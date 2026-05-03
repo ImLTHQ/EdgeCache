@@ -435,6 +435,7 @@ async function loadInfo(){
     fileArea.style.display = 'none';
     status.innerText = '';
     progressEl.innerText = ''; // 清空进度
+    progressEl.style.color = '#2563eb'; // 重置颜色
     clearInterval(expiryInterval);
     return;
   }
@@ -466,6 +467,10 @@ document.getElementById('file').addEventListener('change', async (e) => {
   // 清空状态
   document.getElementById('status').innerText = '';
   progressEl.innerText = '准备上传...';
+  progressEl.style.color = '#2563eb'; // 默认蓝色
+  
+  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB阈值
+  let lastSpeed = '0 B/s'; // 持久化速度，不清零
   
   const xhr = new XMLHttpRequest();
   xhr.open('POST', basePath+'/upload');
@@ -481,16 +486,23 @@ document.getElementById('file').addEventListener('change', async (e) => {
       // 精确到0.1%的百分比
       const percent = (loaded / total * 100).toFixed(1);
       
-      // 1秒计算一次上传速度
+      // 1秒计算一次上传速度，未到1秒则保留上一次速度
       const now = Date.now();
       const duration = (now - lastTime) / 1000;
-      let speed = '0 B/s';
       
       if (duration >= 1) {
         const diffLoaded = loaded - lastLoaded;
-        speed = formatSpeed(diffLoaded / duration);
+        lastSpeed = formatSpeed(diffLoaded / duration);
         lastLoaded = loaded;
         lastTime = now;
+      }
+      const speed = lastSpeed;
+      
+      // 超过25MB自动变红，否则蓝色
+      if (total > MAX_FILE_SIZE) {
+        progressEl.style.color = '#dc2626';
+      } else {
+        progressEl.style.color = '#2563eb';
       }
       
       // 渲染进度信息
