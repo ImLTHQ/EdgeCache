@@ -142,27 +142,21 @@ function go(){
 }
 
 function pageHtml(encodedKey, rawKey, origin) {
-  // 工具函数：每32个字符插入换行符
   function wrapText(str, maxLength) {
     const regex = new RegExp(`(.{1,${maxLength}})`, 'g');
     return str.match(regex)?.join('\n') || str;
   }
-  // 处理标识, 每32字符换行
   const wrappedKey = wrapText(rawKey, 32);
   
   const shareUrl = `${origin}/${encodedKey}/`;
   const basePath = `/${encodedKey}`;
 
-  // ====================== 核心修改：判断换行, 控制空间标识显示 ======================
   let tipContent;
   if (wrappedKey.includes('\n')) {
-    // 标识有换行 → 空间标识独立一行
     tipContent = `空间标识:\n${wrappedKey}\n单文件最大25MB`;
   } else {
-    // 标识无换行 → 空间标识与标识同行
     tipContent = `空间标识: ${wrappedKey}\n单文件最大25MB`;
   }
-  // ==============================================================================
 
   return `
 <!DOCTYPE html>
@@ -268,6 +262,15 @@ body {
   text-align: center;
   min-height: 20px;
 }
+/* 新增进度条样式 */
+#progress {
+  text-align: center;
+  font-size: 14px;
+  color: #2563eb;
+  margin: 8px 0;
+  min-height: 24px;
+  line-height: 1.5;
+}
 #uploadArea, #fileArea {display: none;}
 input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
 .btn:hover, .upload-btn:hover {
@@ -314,6 +317,8 @@ input[type="range"]::-webkit-slider-thumb {
 
   <label class="upload-btn" for="file">选择文件上传</label>
   <input type="file" id="file">
+  <!-- 新增进度显示区域 -->
+  <div id="progress"></div>
   <button class="btn btn-secondary" onclick="backToInput()">上一步</button>
   <div id="status"></div>
 </div>
@@ -335,7 +340,6 @@ input[type="range"]::-webkit-slider-thumb {
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
 
-// 新增1分钟测试选项, 共6个档位
 const ttlOptions = [
   { text: '5分钟', value: 300 },
   { text: '30分钟', value: 1800 },
@@ -347,6 +351,7 @@ const ttlOptions = [
 
 const slider = document.getElementById('ttlSlider');
 const ttlText = document.getElementById('ttlText');
+const progressEl = document.getElementById('progress');
 let currentTtl = ttlOptions[0].value;
 let expiryInterval;
 
@@ -364,6 +369,13 @@ function fmtSize(b){
   if(b<1024)return b+'B';
   if(b<1048576)return (b/1024).toFixed(1)+'KB';
   return (b/1048576).toFixed(2)+'MB';
+}
+
+// 新增：格式化上传速度
+function formatSpeed(bytesPerSecond) {
+  if (bytesPerSecond < 1024) return bytesPerSecond.toFixed(1) + ' B/s';
+  if (bytesPerSecond < 1048576) return (bytesPerSecond / 1024).toFixed(1) + ' KB/s';
+  return (bytesPerSecond / 1048576).toFixed(2) + ' MB/s';
 }
 
 function fmtTime(seconds) {
@@ -393,7 +405,6 @@ function formatDate(timestamp) {
   });
 }
 
-// 分两行显示：有效期剩余 + 过期时间
 function updateExpiryDisplay(expiration) {
   const now = Math.floor(Date.now()/1000);
   const remaining = expiration - now;
@@ -423,6 +434,7 @@ async function loadInfo(){
     uploadArea.style.display = 'flex';
     fileArea.style.display = 'none';
     status.innerText = '';
+    progressEl.innerText = ''; // 清空进度
     clearInterval(expiryInterval);
     return;
   }
@@ -442,21 +454,67 @@ async function loadInfo(){
   }
 }
 
+// 核心：带进度的文件上传（XHR实现）
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
+  
   const fd = new FormData();
   fd.append('file', f);
   fd.append('ttl', currentTtl);
   
-  const res = await fetch(basePath+'/upload', { method:'POST', body:fd });
-  const text = await res.text();
-  if(!res.ok){
-    document.getElementById('status').innerText = text;
-  }else{
-    document.getElementById('status').innerText = '';
-    loadInfo();
-  }
+  // 清空状态
+  document.getElementById('status').innerText = '';
+  progressEl.innerText = '准备上传...';
+  
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', basePath+'/upload');
+  
+  // 上传进度监听
+  let lastLoaded = 0;
+  let lastTime = Date.now();
+  
+  xhr.upload.onprogress = (event) => {
+    if (event.lengthComputable) {
+      const total = event.total;
+      const loaded = event.loaded;
+      // 精确到0.1%的百分比
+      const percent = (loaded / total * 100).toFixed(1);
+      
+      // 1秒计算一次上传速度
+      const now = Date.now();
+      const duration = (now - lastTime) / 1000;
+      let speed = '0 B/s';
+      
+      if (duration >= 1) {
+        const diffLoaded = loaded - lastLoaded;
+        speed = formatSpeed(diffLoaded / duration);
+        lastLoaded = loaded;
+        lastTime = now;
+      }
+      
+      // 渲染进度信息
+      progressEl.innerText = 
+        \`上传进度：\${percent}%\\n已上传：\${fmtSize(loaded)}/\${fmtSize(total)}\\n上传速度：\${speed}\`;
+    }
+  };
+  
+  // 上传完成
+  xhr.onload = () => {
+    if (xhr.status === 200) {
+      progressEl.innerText = '上传完成！';
+      setTimeout(() => loadInfo(), 800); // 延迟刷新页面
+    } else {
+      document.getElementById('status').innerText = '上传失败，文件可能超过25MB';
+    }
+  };
+  
+  // 上传失败
+  xhr.onerror = () => {
+    document.getElementById('status').innerText = '上传失败，网络异常';
+  };
+  
+  xhr.send(fd);
 });
 
 function download(){window.location.href=basePath+'/download'}
