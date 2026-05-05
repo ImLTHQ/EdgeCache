@@ -510,7 +510,7 @@ document.getElementById('file').addEventListener('change', async (e) => {
     if (xhr.status === 200) {
       loadInfo();
     } else {
-      document.getElementById('status').innerText = '失败';
+      document.getElementById('status').innerText = 'KV已满/CF拦截';
     }
   };
   
