@@ -40,7 +40,7 @@ export default {
         });
         return new Response("ok");
       } catch (err) {
-        return resMsg("上传失败, 文件可能超过25MB", 400);
+        return resMsg("上传失败", 400);
       }
     }
 
@@ -142,27 +142,21 @@ function go(){
 }
 
 function pageHtml(encodedKey, rawKey, origin) {
-  // 工具函数：每32个字符插入换行符
   function wrapText(str, maxLength) {
     const regex = new RegExp(`(.{1,${maxLength}})`, 'g');
     return str.match(regex)?.join('\n') || str;
   }
-  // 处理标识, 每32字符换行
   const wrappedKey = wrapText(rawKey, 32);
   
   const shareUrl = `${origin}/${encodedKey}/`;
   const basePath = `/${encodedKey}`;
 
-  // ====================== 核心修改：判断换行, 控制空间标识显示 ======================
   let tipContent;
   if (wrappedKey.includes('\n')) {
-    // 标识有换行 → 空间标识独立一行
     tipContent = `空间标识:\n${wrappedKey}\n单文件最大25MB`;
   } else {
-    // 标识无换行 → 空间标识与标识同行
     tipContent = `空间标识: ${wrappedKey}\n单文件最大25MB`;
   }
-  // ==============================================================================
 
   return `
 <!DOCTYPE html>
@@ -268,6 +262,14 @@ body {
   text-align: center;
   min-height: 20px;
 }
+#progress {
+  text-align: center;
+  font-size: 14px;
+  color: #2563eb;
+  margin: 8px 0;
+  min-height: 24px;
+  line-height: 1.5;
+}
 #uploadArea, #fileArea {display: none;}
 input[type="file"] {position: absolute;opacity: 0;width: 0;height: 0;}
 .btn:hover, .upload-btn:hover {
@@ -314,6 +316,7 @@ input[type="range"]::-webkit-slider-thumb {
 
   <label class="upload-btn" for="file">选择文件上传</label>
   <input type="file" id="file">
+  <div id="progress"></div>
   <button class="btn btn-secondary" onclick="backToInput()">上一步</button>
   <div id="status"></div>
 </div>
@@ -334,8 +337,8 @@ input[type="range"]::-webkit-slider-thumb {
 <script>
 const basePath = "${basePath}";
 const shareUrl = "${shareUrl}";
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
-// 新增1分钟测试选项, 共6个档位
 const ttlOptions = [
   { text: '5分钟', value: 300 },
   { text: '30分钟', value: 1800 },
@@ -347,6 +350,7 @@ const ttlOptions = [
 
 const slider = document.getElementById('ttlSlider');
 const ttlText = document.getElementById('ttlText');
+const progressEl = document.getElementById('progress');
 let currentTtl = ttlOptions[0].value;
 let expiryInterval;
 
@@ -364,6 +368,12 @@ function fmtSize(b){
   if(b<1024)return b+'B';
   if(b<1048576)return (b/1024).toFixed(1)+'KB';
   return (b/1048576).toFixed(2)+'MB';
+}
+
+function formatSpeed(bytesPerSecond) {
+  if (bytesPerSecond < 1024) return bytesPerSecond.toFixed(1) + ' B/s';
+  if (bytesPerSecond < 1048576) return (bytesPerSecond / 1024).toFixed(1) + ' KB/s';
+  return (bytesPerSecond / 1048576).toFixed(2) + ' MB/s';
 }
 
 function fmtTime(seconds) {
@@ -393,7 +403,6 @@ function formatDate(timestamp) {
   });
 }
 
-// 分两行显示：有效期剩余 + 过期时间
 function updateExpiryDisplay(expiration) {
   const now = Math.floor(Date.now()/1000);
   const remaining = expiration - now;
@@ -406,7 +415,6 @@ function updateExpiryDisplay(expiration) {
   
   const ttlText = fmtTime(remaining);
   const expiryDate = formatDate(expiration);
-  // LLM经常乱改下面第二行
   document.getElementById('fileExpiryInfo').innerText = 
     \`剩余有效期：\${ttlText}\\n过期时间：\${expiryDate}\`;
 }
@@ -423,6 +431,7 @@ async function loadInfo(){
     uploadArea.style.display = 'flex';
     fileArea.style.display = 'none';
     status.innerText = '';
+    progressEl.innerText = '';
     clearInterval(expiryInterval);
     return;
   }
@@ -445,18 +454,71 @@ async function loadInfo(){
 document.getElementById('file').addEventListener('change', async (e) => {
   const f = e.target.files[0];
   if(!f) return;
+
+  if (f.size > MAX_FILE_SIZE) {
+    alert(\`文件超出25MB限制\`);
+    e.target.value = '';
+    progressEl.innerText = '';
+    return;
+  }
+  
   const fd = new FormData();
   fd.append('file', f);
   fd.append('ttl', currentTtl);
   
-  const res = await fetch(basePath+'/upload', { method:'POST', body:fd });
-  const text = await res.text();
-  if(!res.ok){
-    document.getElementById('status').innerText = text;
-  }else{
-    document.getElementById('status').innerText = '';
-    loadInfo();
-  }
+  document.getElementById('status').innerText = '';
+  progressEl.innerText = '准备上传...';
+  
+  let lastSpeed = '0 B/s';
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', basePath+'/upload');
+  
+  let lastLoaded = 0;
+  let lastTime = Date.now();
+  // 新增：标记是否是第一次计算速度
+  let isFirstCalculation = true;
+  
+  xhr.upload.onprogress = (event) => {
+    if (event.lengthComputable) {
+      const total = event.total;
+      const loaded = event.loaded;
+      const percent = (loaded / total * 100).toFixed(1);
+      
+      const now = Date.now();
+      const duration = (now - lastTime) / 1000;
+      
+      // 核心修改：第一次有数据就计算速度，之后每1秒更新一次
+      if (isFirstCalculation || duration >= 1) {
+        const diffLoaded = loaded - lastLoaded;
+        // 第一次计算时，用当前已加载的全部数据 / 已耗时（避免速度为0）
+        const speedValue = isFirstCalculation ? (loaded / (duration || 0.001)) : (diffLoaded / duration);
+        lastSpeed = formatSpeed(speedValue);
+        lastLoaded = loaded;
+        lastTime = now;
+        // 第一次计算后，标记为false，后续按1秒间隔
+        isFirstCalculation = false;
+      }
+      const speed = lastSpeed;
+      
+      progressEl.innerText = 
+        \`上传进度：\${percent}%\\n已上传：\${fmtSize(loaded)}/\${fmtSize(total)}\\n上传速度：\${speed}\`;
+    }
+  };
+  
+  // 上传完成直接刷新界面，无提示无延迟
+  xhr.onload = () => {
+    if (xhr.status === 200) {
+      loadInfo();
+    } else {
+      document.getElementById('status').innerText = 'KV已满/CF拦截';
+    }
+  };
+  
+  xhr.onerror = () => {
+    document.getElementById('status').innerText = '网络异常';
+  };
+  
+  xhr.send(fd);
 });
 
 function download(){window.location.href=basePath+'/download'}
