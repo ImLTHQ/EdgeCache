@@ -475,6 +475,8 @@ document.getElementById('file').addEventListener('change', async (e) => {
   
   let lastLoaded = 0;
   let lastTime = Date.now();
+  // 新增：标记是否是第一次计算速度
+  let isFirstCalculation = true;
   
   xhr.upload.onprogress = (event) => {
     if (event.lengthComputable) {
@@ -485,11 +487,16 @@ document.getElementById('file').addEventListener('change', async (e) => {
       const now = Date.now();
       const duration = (now - lastTime) / 1000;
       
-      if (duration >= 1) {
+      // 核心修改：第一次有数据就计算速度，之后每1秒更新一次
+      if (isFirstCalculation || duration >= 1) {
         const diffLoaded = loaded - lastLoaded;
-        lastSpeed = formatSpeed(diffLoaded / duration);
+        // 第一次计算时，用当前已加载的全部数据 / 已耗时（避免速度为0）
+        const speedValue = isFirstCalculation ? (loaded / (duration || 0.001)) : (diffLoaded / duration);
+        lastSpeed = formatSpeed(speedValue);
         lastLoaded = loaded;
         lastTime = now;
+        // 第一次计算后，标记为false，后续按1秒间隔
+        isFirstCalculation = false;
       }
       const speed = lastSpeed;
       
